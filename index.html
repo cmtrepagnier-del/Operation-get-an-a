@@ -102,7 +102,7 @@ linear-gradient(#eef1ef 1px,transparent 1px),linear-gradient(90deg,#eef1ef 1px,t
   <section class="hero">
     <div class="hero-row">
       <div>
-        <div class="brand">Operation Get an A <span style="font-size:12px;vertical-align:middle;background:#fff;color:#18392b;padding:4px 7px;border-radius:999px">v7</span></div>
+        <div class="brand">Operation Get an A <span style="font-size:12px;vertical-align:middle;background:#fff;color:#18392b;padding:4px 7px;border-radius:999px">v8</span></div>
         <div class="tagline">Learn it → work it → prove it → see it again until it sticks.</div>
       </div>
       <div class="hero-badge" id="dailyBadge">Today: 0 reps</div>
@@ -224,7 +224,7 @@ linear-gradient(#eef1ef 1px,transparent 1px),linear-gradient(90deg,#eef1ef 1px,t
       </section>
     </aside>
   </div>
-  <div class="footer">Progress is saved in this browser on this device. • Build v6</div>
+  <div class="footer">Progress is saved in this browser on this device. • Build v8</div>
 </div>
 
 <script>
@@ -324,8 +324,8 @@ function candidateOptions(q){
     .filter(x=>normalize(x)!==normalize(correct))
     .filter(x=>x.length<=160);
   let distract=shuffle(uniq).slice(0,3);
-  const isJournal=/journal/i.test(q.type) || /journal entr/i.test(q.q) || /close the overhead/i.test(q.q);
-  if(isJournal && distract.length<3){
+  const journalNeedsFallback=/journal/i.test(q.type) || /journal entr/i.test(q.q) || /close the overhead/i.test(q.q);
+  if(journalNeedsFallback && distract.length<3){
     const generic=[
       "Dr Manufacturing Overhead; Cr Cost of Goods Sold",
       "Dr Cost of Goods Sold; Cr Manufacturing Overhead",
