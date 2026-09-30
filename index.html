@@ -155,7 +155,7 @@ linear-gradient(#eef1ef 1px,transparent 1px),linear-gradient(90deg,#eef1ef 1px,t
   <section class="hero">
     <div class="hero-row">
       <div>
-        <div class="brand">Operation Get an A <span style="font-size:12px;vertical-align:middle;background:#fff;color:#18392b;padding:4px 7px;border-radius:999px">v16</span></div>
+        <div class="brand">Operation Get an A <span style="font-size:12px;vertical-align:middle;background:#fff;color:#18392b;padding:4px 7px;border-radius:999px">v17</span></div>
         <div class="tagline">Learn it → work it → prove it → see it again until it sticks.</div>
       </div>
       <div class="hero-badge" id="dailyBadge">Today: 0 reps</div>
@@ -388,7 +388,7 @@ linear-gradient(#eef1ef 1px,transparent 1px),linear-gradient(90deg,#eef1ef 1px,t
       </section>
     </aside>
   </div>
-  <div class="footer">Progress is saved in this browser on this device. • Build v16</div>
+  <div class="footer">Progress is saved in this browser on this device. • Build v17</div>
 </div>
 
 <script>
@@ -839,12 +839,33 @@ const LEGIT_HINTS = {
   }
 };
 
+const UNIT_HINTS = {
+  ACCT: {
+    "Ch 1":"Use the manufacturing cost flow: DM used → Total Manufacturing Costs → COGM → COGS. For classifications, factory/manufacturing costs are product costs; selling and administrative costs are period costs.",
+    "Ch 2":"For job costing, identify the overhead rate first, then apply OH using the actual activity. For journal entries, remember actual OH is debited and applied OH is credited (ADAC).",
+    "Ch 3":"Use FERA: Flow → EUP → Rate → Assign. Compute materials and conversion EUP separately when their completion percentages differ.",
+    "Ch 4":"Identify the allocation method first: plantwide uses one rate, departmental uses department-specific rates, and ABC uses activity pools/drivers. Then rate × actual driver usage gives allocated OH.",
+    "Ch 5":"Identify what the question asks for before calculating: units → CM per unit; sales dollars → CM ratio. For high-low, use the highest and lowest ACTIVITY levels.",
+    "Ch 6":"First decide whether the question is about absorption or variable costing. Absorption puts fixed manufacturing OH into product cost; variable costing expenses it in the period. For special orders, use only relevant/incremental amounts and opportunity cost if capacity is constrained."
+  },
+  ECON: {
+    "Module 1":"Use the exact economic rule being tested: opportunity cost is the next-best alternative, and marginal decisions compare marginal benefit with marginal cost.",
+    "Module 2":"Comparative advantage is determined by LOWER opportunity cost, not by who can produce more. Calculate the opportunity costs before choosing who specializes.",
+    "Modules 3–4":"For a demand/supply shift, determine which curve moves and in which direction. A demand increase shifts demand RIGHT; with supply unchanged, the new equilibrium has higher price and higher quantity. A supply decrease shifts supply LEFT.",
+    "Module 5":"For GDP calculations, use GDP = C + I + G + NX and count only final goods/services produced domestically in the period. For real GDP, use the specified base-year prices.",
+    "Module 6":"For CPI, use current basket cost ÷ base-year basket cost × 100. For inflation, calculate the PERCENT CHANGE in CPI—not the CPI level itself.",
+    "Module 7":"Start with the labor-force definitions: labor force = employed + unemployed; unemployment requires no job plus active search (or temporary layoff). Then use the correct denominator for the requested rate."
+  }
+};
+
 function hintFor(q){
   const subjectHints=LEGIT_HINTS[state.subject]||{};
   if(subjectHints[q.n]) return subjectHints[q.n];
-  if(q.type==="Calculation") return "Write the formula shown in the Quick Reference for this unit, identify what each number represents, then substitute.";
-  if(q.type==="Concept") return "Use the exact definition or rule for this unit. Identify the condition in the question that determines the classification.";
-  return "Identify the relationship being tested, write the relevant rule or formula, then work one step at a time.";
+  const unitHints=UNIT_HINTS[state.subject]||{};
+  if(unitHints[q.unit]) return unitHints[q.unit];
+  if(q.type==="Calculation") return "Identify what the question is asking for, write the matching formula from the Quick Reference, and label each number before substituting.";
+  if(q.type==="Concept") return "Use the definition or rule that matches the specific condition described in the question. Eliminate concepts that belong to a different unit.";
+  return "Identify the curve, cost, account, or economic relationship that changes first, then determine the resulting effect from that rule.";
 }
 
 
