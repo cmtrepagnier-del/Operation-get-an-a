@@ -155,7 +155,7 @@ linear-gradient(#eef1ef 1px,transparent 1px),linear-gradient(90deg,#eef1ef 1px,t
   <section class="hero">
     <div class="hero-row">
       <div>
-        <div class="brand">Operation Get an A <span style="font-size:12px;vertical-align:middle;background:#fff;color:#18392b;padding:4px 7px;border-radius:999px">v15</span></div>
+        <div class="brand">Operation Get an A <span style="font-size:12px;vertical-align:middle;background:#fff;color:#18392b;padding:4px 7px;border-radius:999px">v16</span></div>
         <div class="tagline">Learn it → work it → prove it → see it again until it sticks.</div>
       </div>
       <div class="hero-badge" id="dailyBadge">Today: 0 reps</div>
@@ -388,7 +388,7 @@ linear-gradient(#eef1ef 1px,transparent 1px),linear-gradient(90deg,#eef1ef 1px,t
       </section>
     </aside>
   </div>
-  <div class="footer">Progress is saved in this browser on this device. • Build v15</div>
+  <div class="footer">Progress is saved in this browser on this device. • Build v16</div>
 </div>
 
 <script>
@@ -448,14 +448,18 @@ const REFERENCES = {
     "Ch 1":["Prime cost = DM + DL","Conversion cost = DL + OH","DM used = Beg RM + Purchases − End RM","TMC = DM + DL + OH","COGM = Beg WIP + TMC − End WIP","COGS = Beg FG + COGM − End FG"],
     "Ch 2":["POHR = Estimated MOH ÷ Estimated activity","Applied OH = POHR × Actual activity","Total job cost = DM + DL + Applied OH","Actual OH = Debit; Applied OH = Credit","Actual > Applied = underapplied","Applied > Actual = overapplied"],
     "Ch 3":["Weighted-average: Flow → EUP → Rate → Assign","Physical flow: Beg WIP + Started = Transferred + End WIP","EUP = Transferred + Ending WIP × % complete (separately for materials and conversion)","Cost/EUP = (Beg WIP cost + Current cost) ÷ EUP"],
-    "Ch 4":["Plantwide rate = Budgeted OH ÷ Budgeted plantwide base","Department rate = Department OH ÷ Department base","ABC pool rate = Pool cost ÷ Driver quantity","Allocated OH = Rate × Actual driver usage","Activity levels: unit, batch, product, facility"]
+    "Ch 4":["Plantwide rate = Budgeted OH ÷ Budgeted plantwide base","Department rate = Department OH ÷ Department base","ABC pool rate = Pool cost ÷ Driver quantity","Allocated OH = Rate × Actual driver usage","Activity levels: unit, batch, product, facility"],
+    "Ch 5":["Variable cost: total changes with activity; per-unit stays constant","Fixed cost: total stays constant within the relevant range; per-unit changes","Mixed cost: Y = a + bX","High-Low b = (High cost − Low cost) ÷ (High activity − Low activity)","Fixed cost a = Total cost − (b × Activity)","CM/unit = Selling price − Variable cost/unit","CM ratio = Contribution margin ÷ Sales","Break-even units = Fixed costs ÷ CM/unit","Break-even sales dollars = Fixed costs ÷ CM ratio","Target units = (Fixed costs + Target income) ÷ CM/unit","Target sales dollars = (Fixed costs + Target income) ÷ CM ratio","Margin of safety = Actual/expected sales − Break-even sales","DOL = Contribution margin ÷ Income","Expected % income change ≈ DOL × % sales change","Weighted-average CM = Σ(CM/unit × sales-mix %)","Sales dollars question → use CM ratio; units question → use CM/unit","High-Low uses highest/lowest ACTIVITY, not highest/lowest cost"],
+    "Ch 6":["Absorption includes fixed manufacturing OH in product cost","Variable costing expenses all fixed manufacturing OH in the period","Fixed MOH/unit = Total fixed MOH ÷ Units produced","Variable unit product cost = DM + DL + Variable MOH","Absorption unit product cost = DM + DL + Variable MOH + Fixed MOH/unit","Production = Sales → absorption income = variable income","Production > Sales → absorption income > variable income","Production < Sales → absorption income < variable income","Target price = Absorption cost × (1 + markup %)","Special order → incremental revenue − incremental costs","Full capacity → include opportunity cost of displaced contribution margin","External reporting → absorption costing","Inventory increases → absorption income higher than variable income"]
   },
   ECON: {
     "Module 1":["Opportunity cost = value of the next-best alternative","PPF: points on curve are efficient; inside are inefficient; outside are unattainable with current resources","Marginal analysis compares marginal benefit and marginal cost"],
     "Module 2":["Comparative advantage = lower opportunity cost","Specialize according to comparative advantage","Mutually beneficial terms of trade fall between the two opportunity costs"],
     "Module 3":["Demand shift ≠ movement along demand","A price change causes movement along the curve","Shortage: Qd > Qs","Surplus: Qs > Qd"],
     "Module 4":["Elasticity (midpoint) = %Δ quantity ÷ %Δ price","Elastic demand: |E| > 1","Inelastic demand: |E| < 1","Binding price ceiling below equilibrium creates a shortage"],
-    "Module 5":["GDP = C + I + G + NX","GDP counts final goods/services produced domestically in the period","Real GDP uses base-year prices","GDP deflator = Nominal GDP ÷ Real GDP × 100"]
+    "Module 5":["GDP = C + I + G + NX","GDP counts final goods/services produced domestically in the period","Real GDP uses base-year prices","GDP deflator = Nominal GDP ÷ Real GDP × 100"],
+    "Module 6":["CPI = Current basket cost ÷ Base-year basket cost × 100","CPI 120 means the basket costs 20% more than in the base year","Inflation = (New CPI − Old CPI) ÷ Old CPI × 100","Substitution bias: a fixed basket misses consumers switching toward relatively cheaper goods","Indexation = automatic adjustment tied to an inflation measure","Real interest rate ≈ Nominal interest rate − Inflation rate","Old dollars in current dollars = Old amount × Current CPI ÷ Old CPI","Inflation is a percentage change in a price index","Quality-change problem: CPI can have difficulty separating better products from higher prices","Real wages depend on wage growth relative to inflation","CPI 200 → 210 means 5% inflation","Nominal rate below inflation → negative approximate real rate"],
+    "Module 7":["Labor force = Employed + Unemployed","Unemployed = no job + actively seeking work (or temporary layoff)","Discouraged worker who stops searching → not in labor force","Unemployment rate = Unemployed ÷ Labor force × 100","Labor-force participation rate = Labor force ÷ Adult population × 100","Frictional unemployment = normal job search/matching","Structural unemployment = worker/job mismatch or wage-setting effects","Cyclical unemployment = recession/economic downturn","Natural rate = Frictional + Structural unemployment","Cyclical unemployment = Actual unemployment rate − Natural rate","Discouraged worker starts searching → labor force rises and unemployment initially rises","Official unemployment does not fully capture underemployment","Efficiency wage above equilibrium can contribute to structural unemployment"]
   }
 };
 
@@ -728,12 +732,120 @@ function autoGrade(q,ans){
   }
   return null;
 }
-function hintFor(q){
-  if(q.type==="Calculation") return "Write the formula or relationship first, then plug in the numbers. Do not skip the setup.";
-  if(q.type==="Concept") return `Focus on the definition or classification rule from ${q.unit}. Eliminate choices that belong to a different concept.`;
-  return `Break the question into cause → effect. Use the wording of ${q.unit} and explain why, not just what.`;
-}
+const LEGIT_HINTS = {
+  ACCT: {
+    71:"Fixed cost means the TOTAL cost stays unchanged within the relevant range as activity changes.",
+    72:"For a variable cost, ask what happens to the COST PER UNIT when volume changes.",
+    73:"High-Low: b = (High total cost − Low total cost) ÷ (High activity − Low activity). Use activity to choose high and low.",
+    74:"After finding b, use a = Total cost − (b × Activity).",
+    75:"CM per unit = Selling price per unit − Variable cost per unit.",
+    76:"CM ratio = Contribution margin ÷ Sales. Per-unit CM ÷ selling price gives the same ratio.",
+    77:"Because the question asks for UNITS: Fixed costs ÷ CM per unit.",
+    78:"Because the question asks for SALES DOLLARS: Fixed costs ÷ CM ratio.",
+    79:"Target units add target income to fixed costs before dividing by CM per unit.",
+    80:"Target sales dollars = (Fixed costs + Target income) ÷ CM ratio.",
+    81:"Margin of safety = Actual/expected sales − Break-even sales.",
+    82:"DOL = Contribution margin ÷ Income.",
+    83:"Approximate % change in income = DOL × % change in sales.",
+    84:"Multiply each product's CM per unit by its sales-mix percentage, then add the weighted amounts.",
+    85:"The question asks for DOLLARS, so use the denominator that converts fixed costs into sales dollars.",
+    86:"High-Low is based on the highest and lowest ACTIVITY levels; then use their corresponding costs.",
+    87:"Compare how the two methods treat FIXED manufacturing overhead. DM, DL, and variable MOH are treated the same.",
+    88:"Fixed MOH per unit = Total fixed manufacturing OH ÷ Units produced.",
+    89:"Variable product cost includes DM + DL + variable manufacturing OH. Leave fixed MOH out.",
+    90:"Absorption product cost = variable product cost + fixed MOH per unit.",
+    91:"If production equals sales, there is no inventory change to defer or release fixed MOH.",
+    92:"Production exceeds sales, so some fixed MOH remains in ending inventory. Multiply inventory increase by fixed MOH/unit.",
+    93:"Sales exceed production, so fixed MOH is released from inventory. Determine which method recognizes that released OH.",
+    94:"A 50% markup on cost means selling price = cost + 50% of cost.",
+    95:"With idle capacity and unchanged fixed costs, compare incremental revenue with the variable/special costs caused by the order.",
+    96:"Displaced regular sales create an opportunity cost equal to the contribution margin you give up.",
+    97:"External financial reporting requires fixed manufacturing overhead to be included in inventory/product cost.",
+    98:"Under absorption costing, fixed manufacturing OH can be attached to unsold inventory. More production can defer expense.",
+    99:"With idle capacity and unchanged fixed costs, use only revenues and costs that CHANGE because of the order.",
+    100:"Inventory increases → some fixed MOH is deferred in inventory → absorption income is higher.",
+    101:"High-Low: use 340,000 and 80,000 units, then divide the change in total cost by the change in activity.",
+    102:"First find the variable rate, then fixed cost = Total cost − (Variable rate × Activity).",
+    103:"Use Y = a + bX with a = fixed cost and b = variable cost per unit.",
+    104:"Same cost equation: Y = fixed cost + (variable cost/unit × new activity).",
+    105:"Add the listed variable costs only.",
+    106:"Contribution margin = Sales − Total variable costs.",
+    107:"Add the listed fixed costs; do not mix variable costs into the total.",
+    108:"Income = Contribution margin − Fixed costs.",
+    109:"CM per unit = Total contribution margin ÷ Units sold.",
+    110:"CM ratio = Total contribution margin ÷ Sales.",
+    111:"The CM ratio is the fraction of each sales dollar left after variable costs.",
+    112:"A 40% reduction leaves 60% of the original variable cost.",
+    113:"CM per unit = Selling price − New variable cost per unit.",
+    114:"CM ratio = CM per unit ÷ Selling price per unit.",
+    115:"Revised fixed costs = Old fixed costs + Additional fixed costs.",
+    116:"Break-even sales dollars = Fixed costs ÷ CM ratio.",
+    117:"Income = Sales − Variable costs − Fixed costs. A 48% variable-cost ratio means a 52% CM ratio.",
+    118:"Target sales dollars = (Fixed costs + Target income) ÷ CM ratio.",
+    119:"Target units = (Fixed costs + Target income) ÷ CM per unit.",
+    120:"Use the highest and lowest activity levels, calculate b, then solve a = Y − bX.",
+    121:"Because the question asks for sales dollars: (Fixed costs + Target income) ÷ CM ratio.",
+    122:"CM/unit = $14.50 − $7.50. Then CM ratio = CM/unit ÷ selling price.",
+    123:"Break-even units = Fixed costs ÷ (Selling price − Variable cost).",
+    124:"Pick the highest and lowest ACTIVITY first; then calculate the variable rate and fixed cost.",
+    125:"First find CM/unit = 320 − 176. Then target units = (927,000 + 1,185,000) ÷ CM/unit.",
+    126:"Sales = Units × Selling price. CM = Income + Fixed costs. Variable costs = Sales − CM.",
+    127:"Variable costs = Sales − Contribution margin.",
+    128:"High-Low variable rate = change in total cost ÷ change in units. Use 2,700 and 460.",
+    129:"Sales = 200,000 × $15. CM = Income + Fixed costs. Variable costs = Sales − CM.",
+    130:"CM/unit = Selling price − Variable cost; Total CM = Units × CM/unit.",
+    131:"CM/unit = Selling price − Variable cost.",
+    132:"Target units = (Fixed costs + Target income) ÷ CM per unit.",
+    133:"CM ratio = (Selling price − Variable cost) ÷ Selling price.",
+    134:"Calculate the new CM/unit after the variable-cost reduction, then divide by selling price.",
+    135:"Variable costs = Sales − Contribution margin.",
+    136:"DOL = Contribution margin ÷ Income. Then multiply DOL by the 8% sales increase.",
+    137:"Contribution margin = Sales − Variable costs.",
+    138:"Use the highest and lowest ACTIVITY levels—not the highest and lowest dollar amounts.",
+    139:"Target sales dollars = (Fixed costs + Target income) ÷ CM ratio.",
+    140:"Ask which cost changes when units double. Variable costs change with activity; fixed costs do not within the relevant range."
+  },
+  ECON: {
+    61:"CPI follows the cost of a fixed basket purchased by a typical consumer.",
+    62:"Use 100 as the base-year index. Compare 120 with 100.",
+    63:"CPI = Current basket cost ÷ Base-year basket cost × 100.",
+    64:"Inflation rate = (New CPI − Old CPI) ÷ Old CPI × 100.",
+    65:"When one good becomes relatively more expensive, consumers may switch toward another good. A fixed basket does not fully capture that switch.",
+    66:"Indexation connects a payment to a price index so it changes automatically with inflation.",
+    67:"Nominal is the stated rate; real adjusts for inflation's effect on purchasing power.",
+    68:"Approximate real interest = nominal interest − inflation.",
+    69:"Current-dollar equivalent = Old amount × (Current CPI ÷ Old CPI).",
+    70:"Inflation is a RATE OF CHANGE in the price level, not the price level itself.",
+    71:"Compare wage growth (4%) with price growth (6%). Purchasing power follows the wage change after accounting for inflation.",
+    72:"Ask what happens when a product improves while its price rises. The index has difficulty isolating pure price change.",
+    73:"A cost-of-living adjustment changes a payment according to an inflation measure.",
+    74:"Inflation = (210 − 200) ÷ 200 × 100.",
+    75:"Real interest ≈ nominal interest − inflation. What happens when inflation is larger?",
+    76:"Labor force = employed + unemployed. Not every adult belongs in the labor force.",
+    77:"The key phrase is 'stopped searching.' Active job search is required to be counted as unemployed.",
+    78:"Add employed people and unemployed people.",
+    79:"First calculate labor force. Then unemployment rate = unemployed ÷ labor force × 100.",
+    80:"First calculate labor force. Then divide it by the adult population.",
+    81:"Frictional unemployment is the normal time spent searching for and matching with jobs.",
+    82:"Structural unemployment involves a mismatch between workers and available jobs or wage-setting that keeps wages above equilibrium.",
+    83:"Cyclical unemployment moves with the business cycle. Think recession.",
+    84:"The natural rate includes the types of unemployment that remain even at normal employment.",
+    85:"Cyclical unemployment = Actual unemployment rate − Natural rate.",
+    86:"When someone starts actively searching, they enter the labor force. Until they find a job, they are unemployed.",
+    87:"Official unemployment focuses on job status and active search; it does not fully capture hours or skill mismatch among employed workers.",
+    88:"An efficiency wage is above equilibrium. Ask what a higher wage does to the quantity of labor demanded.",
+    89:"Having no job is not enough. Check whether the person is actively looking for work.",
+    90:"Natural rate = frictional + structural. Which category is left out?"
+  }
+};
 
+function hintFor(q){
+  const subjectHints=LEGIT_HINTS[state.subject]||{};
+  if(subjectHints[q.n]) return subjectHints[q.n];
+  if(q.type==="Calculation") return "Write the formula shown in the Quick Reference for this unit, identify what each number represents, then substitute.";
+  if(q.type==="Concept") return "Use the exact definition or rule for this unit. Identify the condition in the question that determines the classification.";
+  return "Identify the relationship being tested, write the relevant rule or formula, then work one step at a time.";
+}
 
 
 function worksheetPool(){
