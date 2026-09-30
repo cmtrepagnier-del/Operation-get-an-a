@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#18392b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Get an A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Operation Get an A</title>
+<style>
+:root {
+  --green:#18392b; --green2:#24513d; --cream:#f6f4ec; --ink:#17201c; --muted:#6f7b74;
+  --card:#ffffff; --border:#d9dfdb; --good:#176b3a; --bad:#a33434; --gold:#a57920;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit}
+.app{max-width:980px;margin:0 auto;padding:16px 16px 40px}
+.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+.brand{font-size:28px;font-weight:800;letter-spacing:-.5px}
+.sub{color:var(--muted);font-size:14px}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+select,button,input[type=text]{border:1px solid var(--border);background:#fff;color:var(--ink);border-radius:12px;padding:12px 14px;min-height:46px}
+button{font-weight:700;cursor:pointer}
+button.primary{background:var(--green);color:#fff;border-color:var(--green)}
+button.secondary{background:#fff}
+button.bad{color:#fff;background:var(--bad);border-color:var(--bad)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0 14px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:10px;text-align:center}
+.stat b{display:block;font-size:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:14px}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.pill{font-size:12px;padding:5px 8px;border-radius:999px;background:#eef2ef;color:#415049}
+.question{font-size:24px;line-height:1.3;font-weight:750;margin:6px 0 12px}
+.scratch-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.canvas-wrap{border:2px solid #cfd8d2;border-radius:16px;overflow:hidden;background:#fff;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+canvas{width:100%;height:390px;display:block;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;background:
+linear-gradient(#eef1ef 1px, transparent 1px),
+linear-gradient(90deg,#eef1ef 1px, transparent 1px);
+background-size:28px 28px;}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.toolbar button.active{background:var(--green2);color:#fff}
+.answerbox textarea{width:100%;min-height:90px;border:1px solid var(--border);border-radius:12px;padding:12px;font-size:16px}
+.actionrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.result{display:none;margin-top:12px;padding:12px;border-radius:12px;background:#f3f6f4;border:1px solid var(--border)}
+.result.show{display:block}
+.correct-answer{font-weight:800;margin-bottom:6px}
+.grade-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.queue{display:none}
+.queue.show{display:block}
+.queue-item{border-top:1px solid var(--border);padding:10px 0}
+.queue-item:first-child{border-top:0}
+.small{font-size:13px;color:var(--muted)}
+.footer-note{font-size:12px;color:var(--muted);margin-top:12px}
+@media (max-width:700px){
+  .brand{font-size:24px}
+  .question{font-size:21px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  canvas{height:340px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div>
+      <div class="brand">Operation Get an A</div>
+      <div class="sub">ACCT + ECON practice • Apple Pencil scratchpad • missed-question queue</div>
+    </div>
+    <div class="controls">
+      <select id="subject" aria-label="Subject">
+        <option value="ACCT">ACCT 2302</option>
+        <option value="ECON">ECON 2301</option>
+      </select>
+      <select id="filter" aria-label="Chapter or module"></select>
+      <select id="difficulty" aria-label="Difficulty">
+        <option value="All">All levels</option>
+        <option value="Warm-up">Warm-up</option>
+        <option value="Exam-level">Exam-level</option>
+        <option value="Stretch">Stretch</option>
+      </select>
+      <button id="missedBtn" class="secondary" type="button">Missed Queue</button>
+      <button id="resetBtn" class="bad" type="button">Reset</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="doneStat">0</b><span>attempted</span></div>
+    <div class="stat"><b id="correctStat">0</b><span>correct</span></div>
+    <div class="stat"><b id="missedStat">0</b><span>missed</span></div>
+    <div class="stat"><b id="leftStat">0</b><span>left in set</span></div>
+  </div>
+
+  <section id="practiceCard" class="card">
+    <div class="meta">
+      <span id="unitPill" class="pill"></span>
+      <span id="typePill" class="pill"></span>
+      <span id="diffPill" class="pill"></span>
+      <span id="numPill" class="pill"></span>
+    </div>
+    <div id="question" class="question"></div>
+
+    <div class="scratch-head">
+      <div>
+        <b>Scratchpad</b>
+        <div class="small">Apple Pencil writes here without moving the page. Scroll with your finger outside the scratchpad.</div>
+      </div>
+      <div class="toolbar">
+        <button id="penBtn" class="active" type="button">Pen</button>
+        <button id="eraserBtn" type="button">Eraser</button>
+        <button id="undoBtn" type="button">Undo</button>
+        <button id="clearBtn" type="button">Clear</button>
+      </div>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="pad" aria-label="Handwriting scratchpad"></canvas>
+    </div>
+
+    <div class="answerbox" style="margin-top:14px">
+      <label for="typed"><b>Your answer</b> <span class="small">(optional — you can also work entirely on the scratchpad)</span></label>
+      <textarea id="typed" placeholder="Type a final answer if you want. For journal entries, you can type Dr/Cr."></textarea>
+      <div class="actionrow">
+        <button id="checkBtn" class="primary" type="button">Check Answer</button>
+        <button id="skipBtn" class="secondary" type="button">Next Question</button>
+      </div>
+
+      <div id="result" class="result">
+        <div class="small">Correct answer</div>
+        <div id="correctAnswer" class="correct-answer"></div>
+        <div id="explain" class="small"></div>
+        <div class="grade-row">
+          <button id="gotItBtn" class="primary" type="button">✓ I got it</button>
+          <button id="missedItBtn" class="bad" type="button">✕ Missed it</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="queueCard" class="card queue">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
+      <div>
+        <h2 style="margin:0">Missed Queue</h2>
+        <div class="small">These stay here until you mark them correct on a later attempt.</div>
+      </div>
+      <button id="backBtn" class="secondary" type="button">Back to Practice</button>
+    </div>
+    <div id="queueList" style="margin-top:8px"></div>
+  </section>
+
+  <div class="footer-note">Progress is saved on this device in your browser. Reset clears saved progress for both subjects.</div>
+</div>
+
+<script>
+const BANK = {"ACCT": [{"n": 1, "unit": "Ch 1", "type": "Concept", "difficulty": "Warm-up", "q": "Classify factory rent: product or period, and direct or indirect?", "a": "Product cost; indirect (factory overhead).", "e": "Factory rent is manufacturing but not economically traceable to one product."}, {"n": 2, "unit": "Ch 1", "type": "Concept", "difficulty": "Warm-up", "q": "Which cost belongs to both prime cost and conversion cost?", "a": "Direct labor.", "e": "Prime = DM + DL; Conversion = DL + OH."}, {"n": 3, "unit": "Ch 1", "type": "Calculation", "difficulty": "Warm-up", "q": "Beginning RM $9,400 + purchases $46,600 − ending RM $8,000. Direct materials used?", "a": "$48,000.", "e": "$9,400 + $46,600 − $8,000 = $48,000."}, {"n": 4, "unit": "Ch 1", "type": "Calculation", "difficulty": "Warm-up", "q": "DM used $48,000 + DL $31,500 + OH $27,500. Total manufacturing costs?", "a": "$107,000.", "e": "DM + DL + OH."}, {"n": 5, "unit": "Ch 1", "type": "Calculation", "difficulty": "Exam-level", "q": "Beginning WIP $7,500 + TMC $107,000 − ending WIP $9,200. COGM?", "a": "$105,300.", "e": "Beg WIP + TMC − End WIP."}, {"n": 6, "unit": "Ch 1", "type": "Calculation", "difficulty": "Exam-level", "q": "Beginning FG $12,600 + COGM $105,300 − ending FG $10,900. COGS?", "a": "$107,000.", "e": "Beg FG + COGM − End FG."}, {"n": 7, "unit": "Ch 1", "type": "Concept", "difficulty": "Exam-level", "q": "A product is finished but not sold. Which account holds its cost?", "a": "Finished Goods Inventory.", "e": "Completed-but-unsold product remains an inventory asset."}, {"n": 8, "unit": "Ch 1", "type": "Concept", "difficulty": "Exam-level", "q": "Why can COGM be higher than COGS in the same period?", "a": "Some completed goods remain unsold in Finished Goods.", "e": "COGM measures completed production; COGS measures sold product cost."}, {"n": 9, "unit": "Ch 1", "type": "Calculation", "difficulty": "Exam-level", "q": "Average RM inventory $18,000; RM used $126,000. Raw materials turnover?", "a": "7.0 times.", "e": "$126,000 ÷ $18,000 = 7.0."}, {"n": 10, "unit": "Ch 1", "type": "Calculation", "difficulty": "Stretch", "q": "Ending RM $14,000; RM used $175,000. Days sales in RM using 365 days?", "a": "29.2 days.", "e": "$14,000 ÷ $175,000 × 365 ≈ 29.2."}, {"n": 11, "unit": "Ch 1", "type": "Concept", "difficulty": "Exam-level", "q": "Classify: sales commission, factory utilities, assembly wages, corporate office rent.", "a": "Period; product/OH; product/direct labor; period.", "e": "Selling/admin are period; factory costs are product."}, {"n": 12, "unit": "Ch 1", "type": "Calculation", "difficulty": "Stretch", "q": "Beg RM $15,000, purchases $72,000, end RM $11,000, DL $49,000, OH $36,000, beg WIP $13,000, end WIP $10,000, beg FG $18,000, end FG $16,000. Compute DM used, TMC, COGM, and COGS.", "a": "DM $76,000; TMC $161,000; COGM $164,000; COGS $166,000.", "e": "DM=15+72−11=76; TMC=76+49+36=161; COGM=13+161−10=164; COGS=18+164−16=166 (thousands)."}, {"n": 13, "unit": "Ch 2", "type": "Calculation", "difficulty": "Warm-up", "q": "Estimated OH $210,000 ÷ estimated 70,000 MH. POHR?", "a": "$3 per MH.", "e": "$210,000 ÷ 70,000 = $3."}, {"n": 14, "unit": "Ch 2", "type": "Calculation", "difficulty": "Warm-up", "q": "A job uses 850 MH at a $3/MH POHR. Applied OH?", "a": "$2,550.", "e": "850 × $3."}, {"n": 15, "unit": "Ch 2", "type": "Calculation", "difficulty": "Exam-level", "q": "Job 18: DM $7,800, DL $9,200, applied OH $5,520. Total job cost?", "a": "$22,520.", "e": "DM + DL + applied OH."}, {"n": 16, "unit": "Ch 2", "type": "Journal Entry", "difficulty": "Warm-up", "q": "Buy $18,000 raw materials on account.", "a": "Dr Raw Materials $18,000; Cr Accounts Payable $18,000.", "e": "Materials enter inventory."}, {"n": 17, "unit": "Ch 2", "type": "Journal Entry", "difficulty": "Warm-up", "q": "Issue $11,500 direct materials to production.", "a": "Dr WIP $11,500; Cr Raw Materials $11,500.", "e": "Direct material goes to the job/WIP."}, {"n": 18, "unit": "Ch 2", "type": "Journal Entry", "difficulty": "Warm-up", "q": "Issue $1,800 indirect materials.", "a": "Dr Factory Overhead $1,800; Cr Raw Materials $1,800.", "e": "Indirect materials are actual overhead."}, {"n": 19, "unit": "Ch 2", "type": "Journal Entry", "difficulty": "Warm-up", "q": "Record $14,000 direct labor.", "a": "Dr WIP $14,000; Cr Wages Payable $14,000.", "e": "Direct labor is traced to jobs."}, {"n": 20, "unit": "Ch 2", "type": "Journal Entry", "difficulty": "Warm-up", "q": "Record $3,600 indirect labor.", "a": "Dr Factory Overhead $3,600; Cr Wages Payable $3,600.", "e": "Indirect labor is actual overhead."}, {"n": 21, "unit": "Ch 2", "type": "Journal Entry", "difficulty": "Exam-level", "q": "Apply $12,400 of overhead to jobs.", "a": "Dr WIP $12,400; Cr Factory Overhead $12,400.", "e": "Applied OH goes to WIP and credits OH: ADAC."}, {"n": 22, "unit": "Ch 2", "type": "Journal Entry", "difficulty": "Exam-level", "q": "Complete a job costing $44,000.", "a": "Dr Finished Goods $44,000; Cr WIP $44,000.", "e": "Completed cost moves WIP → Finished Goods."}, {"n": 23, "unit": "Ch 2", "type": "Journal Entry", "difficulty": "Exam-level", "q": "Sell a job costing $44,000 for $63,000 cash. Record both entries.", "a": "Dr Cash $63,000; Cr Sales $63,000. Dr COGS $44,000; Cr Finished Goods $44,000.", "e": "Revenue entry and cost-flow entry are separate."}, {"n": 24, "unit": "Ch 2", "type": "Calculation", "difficulty": "Exam-level", "q": "Actual OH $118,000; applied OH $111,500. Under- or overapplied, and by how much?", "a": "Underapplied by $6,500.", "e": "Actual > applied, leaving a debit balance."}, {"n": 25, "unit": "Ch 2", "type": "Journal Entry", "difficulty": "Exam-level", "q": "Close the overhead from Q24.", "a": "Dr COGS $6,500; Cr Factory Overhead $6,500.", "e": "Zero out the debit OH balance."}, {"n": 26, "unit": "Ch 2", "type": "Calculation", "difficulty": "Exam-level", "q": "Actual OH $92,000; applied OH $97,200. Under- or overapplied, and by how much?", "a": "Overapplied by $5,200.", "e": "Applied > actual, leaving a credit balance."}, {"n": 27, "unit": "Ch 2", "type": "Journal Entry", "difficulty": "Exam-level", "q": "Close the overhead from Q26.", "a": "Dr Factory Overhead $5,200; Cr COGS $5,200.", "e": "Zero out the credit OH balance."}, {"n": 28, "unit": "Ch 2", "type": "Calculation", "difficulty": "Stretch", "q": "Estimated OH $156,000 based on estimated DL cost $120,000. Job A has DM $9,000 and DL $15,000. Compute POHR, applied OH, and total job cost.", "a": "POHR 130% of DL cost; applied OH $19,500; job cost $43,500.", "e": "156/120=130%; 1.30×15,000=19,500; 9,000+15,000+19,500."}, {"n": 29, "unit": "Ch 2", "type": "Concept", "difficulty": "Exam-level", "q": "Why is applied overhead a credit to Factory Overhead?", "a": "Because applied OH removes/assigns overhead from the control account to WIP.", "e": "Actual OH debits the account; applied OH credits it (ADAC)."}, {"n": 30, "unit": "Ch 2", "type": "Concept", "difficulty": "Exam-level", "q": "At year-end, where are unfinished jobs? Where are completed-but-unsold jobs?", "a": "Unfinished jobs: WIP. Completed-unsold jobs: Finished Goods.", "e": "Cost flow determines the inventory bucket."}, {"n": 31, "unit": "Ch 3", "type": "Calculation", "difficulty": "Warm-up", "q": "Beginning WIP 9,000 + started 61,000 − transferred 55,000. Ending WIP units?", "a": "15,000 units.", "e": "9,000+61,000−55,000."}, {"n": 32, "unit": "Ch 3", "type": "Calculation", "difficulty": "Warm-up", "q": "Ending WIP 15,000 units, 100% materials and 40% conversion. Ending EUP by category?", "a": "Materials 15,000 EUP; conversion 6,000 EUP.", "e": "15,000×100%; 15,000×40%."}, {"n": 33, "unit": "Ch 3", "type": "Calculation", "difficulty": "Exam-level", "q": "55,000 transferred + ending materials EUP 15,000. Total materials EUP?", "a": "70,000 EUP.", "e": "Transferred units are 100% complete."}, {"n": 34, "unit": "Ch 3", "type": "Calculation", "difficulty": "Exam-level", "q": "55,000 transferred + ending conversion EUP 6,000. Total conversion EUP?", "a": "61,000 EUP.", "e": "Transferred units + ending conversion EUP."}, {"n": 35, "unit": "Ch 3", "type": "Calculation", "difficulty": "Exam-level", "q": "Materials cost $161,000 ÷ 70,000 EUP. Cost per materials EUP?", "a": "$2.30.", "e": "161,000 ÷ 70,000."}, {"n": 36, "unit": "Ch 3", "type": "Calculation", "difficulty": "Exam-level", "q": "Conversion cost $122,000 ÷ 61,000 EUP. Cost per conversion EUP?", "a": "$2.00.", "e": "122,000 ÷ 61,000."}, {"n": 37, "unit": "Ch 3", "type": "Calculation", "difficulty": "Exam-level", "q": "Using $2.30 materials + $2.00 conversion, assign cost to 55,000 transferred units.", "a": "$236,500.", "e": "55,000×$4.30."}, {"n": 38, "unit": "Ch 3", "type": "Calculation", "difficulty": "Exam-level", "q": "Ending WIP 15,000 materials EUP and 6,000 conversion EUP at $2.30/$2.00. Ending WIP cost?", "a": "$46,500.", "e": "15,000×2.30 + 6,000×2.00."}, {"n": 39, "unit": "Ch 3", "type": "Concept", "difficulty": "Exam-level", "q": "What is the FERA sequence?", "a": "Flow → EUP → Rate → Assign.", "e": "Use this order for weighted-average process costing."}, {"n": 40, "unit": "Ch 3", "type": "Concept", "difficulty": "Exam-level", "q": "Why must materials and conversion EUP be computed separately?", "a": "They can have different completion percentages.", "e": "A unit may have all materials but only some conversion work."}, {"n": 41, "unit": "Ch 3", "type": "Journal Entry", "difficulty": "Exam-level", "q": "Transfer $280,000 from Mixing to Packaging.", "a": "Dr WIP—Packaging $280,000; Cr WIP—Mixing $280,000.", "e": "Cost moves between departments."}, {"n": 42, "unit": "Ch 3", "type": "Journal Entry", "difficulty": "Exam-level", "q": "Transfer $390,000 from final department to Finished Goods.", "a": "Dr Finished Goods $390,000; Cr WIP—Final Department $390,000.", "e": "Completed production leaves WIP."}, {"n": 43, "unit": "Ch 3", "type": "Concept", "difficulty": "Stretch", "q": "Weighted average versus FIFO: what is the key distinction?", "a": "Weighted average mixes beginning and current-period work/costs; FIFO separates them.", "e": "Use the method named in the problem."}, {"n": 44, "unit": "Ch 3", "type": "Calculation", "difficulty": "Stretch", "q": "20,000 ending WIP units are 100% materials and 25% conversion. Cost/EUP = $2.60 materials and $1.80 conversion. Ending WIP cost?", "a": "$61,000.", "e": "20,000×2.60 + 5,000×1.80 = 52,000+9,000."}, {"n": 45, "unit": "Ch 4", "type": "Calculation", "difficulty": "Warm-up", "q": "Budgeted OH $720,000 ÷ 120,000 DLH. Plantwide rate?", "a": "$6 per DLH.", "e": "720,000 ÷ 120,000."}, {"n": 46, "unit": "Ch 4", "type": "Calculation", "difficulty": "Warm-up", "q": "A unit uses 5 DLH at the $6 rate. OH per unit?", "a": "$30.", "e": "5×$6."}, {"n": 47, "unit": "Ch 4", "type": "Calculation", "difficulty": "Exam-level", "q": "Machining OH $480,000/16,000 MH; Assembly OH $240,000/40,000 DLH. Department rates?", "a": "Machining $30/MH; Assembly $6/DLH.", "e": "Compute each pool separately."}, {"n": 48, "unit": "Ch 4", "type": "Calculation", "difficulty": "Exam-level", "q": "A unit uses 4 MH and 7 DLH. Apply Q47 departmental OH.", "a": "$162 per unit.", "e": "4×30 + 7×6 = 120+42."}, {"n": 49, "unit": "Ch 4", "type": "Calculation", "difficulty": "Exam-level", "q": "Setup pool $150,000/75 setups. Rate? Product Z uses 9 setups. Allocated setup cost?", "a": "$2,000/setup; $18,000 allocated.", "e": "150,000/75=2,000; 9×2,000."}, {"n": 50, "unit": "Ch 4", "type": "Calculation", "difficulty": "Exam-level", "q": "Inspection pool $96,000/480 inspections. Rate? Product Z uses 70 inspections.", "a": "$200/inspection; $14,000 allocated.", "e": "96,000/480=200; 70×200."}, {"n": 51, "unit": "Ch 4", "type": "Calculation", "difficulty": "Exam-level", "q": "Using Q49–50, total ABC OH for Product Z?", "a": "$32,000.", "e": "$18,000 + $14,000."}, {"n": 52, "unit": "Ch 4", "type": "Calculation", "difficulty": "Exam-level", "q": "Product Z makes 160 units. ABC OH per unit from Q51?", "a": "$200 per unit.", "e": "32,000 ÷ 160."}, {"n": 53, "unit": "Ch 4", "type": "Concept", "difficulty": "Exam-level", "q": "Classify: machine processing, setups, product redesign, factory security.", "a": "Unit-level; batch-level; product-level; facility-level.", "e": "Match activity to what causes it."}, {"n": 54, "unit": "Ch 4", "type": "Concept", "difficulty": "Exam-level", "q": "Why can one plantwide rate undercost a low-volume complex product?", "a": "Complex products may consume many setups/design activities that a volume driver misses.", "e": "One volume-based driver can misallocate overhead."}, {"n": 55, "unit": "Ch 4", "type": "Calculation", "difficulty": "Stretch", "q": "Two departments: OH $360,000 and $240,000; MH 12,000 and 8,000. Plantwide MH rate and each departmental MH rate?", "a": "Plantwide $30/MH; Dept 1 $30/MH; Dept 2 $30/MH.", "e": "Total OH 600,000/20,000=30; each department also 30."}, {"n": 56, "unit": "Ch 4", "type": "Calculation", "difficulty": "Stretch", "q": "Plantwide rate $15/DLH; product uses 2 DLH and 7 MH. OH per unit?", "a": "$30.", "e": "Use only the stated plantwide allocation base: 2×15."}, {"n": 57, "unit": "Ch 4", "type": "Calculation", "difficulty": "Stretch", "q": "ABC pools: Assembly $180,000/45,000 DLH; Electricity $36,000/12,000 MH; Purchasing $75,000/500 orders. Product A uses 8,000 DLH, 2,000 MH, 80 orders. Total OH?", "a": "$50,000.", "e": "Rates: $4/DLH, $3/MH, $150/order. Allocation: 32,000+6,000+12,000."}, {"n": 58, "unit": "Ch 4", "type": "Calculation", "difficulty": "Stretch", "q": "Q57 Product A makes 2,000 units. OH/unit? If DM $22, DL $31, selling price $82, compute product cost/unit and gross profit/unit.", "a": "OH $25/unit; product cost $78; gross profit $4/unit.", "e": "50,000/2,000=25; 22+31+25=78; 82−78=4."}, {"n": 59, "unit": "Ch 4", "type": "Concept", "difficulty": "Exam-level", "q": "State the three broad departmental/ABC allocation steps.", "a": "Pool costs → compute rate → allocate/apply to cost objects.", "e": "Chapter 4 repeatedly uses pool/rate/apply logic."}, {"n": 60, "unit": "Ch 4", "type": "Concept", "difficulty": "Stretch", "q": "A simple high-volume product looks less profitable under plantwide than under ABC. What likely happened?", "a": "Plantwide overallocated overhead to the simple product; ABC reassigned more overhead to complex activity-heavy products.", "e": "Traditional volume rates can overcost simple/high-volume items."}], "ECON": [{"n": 1, "unit": "Module 1", "type": "Concept", "difficulty": "Warm-up", "q": "Define scarcity.", "a": "Limited resources relative to unlimited wants.", "e": "Economics studies choices under scarcity."}, {"n": 2, "unit": "Module 1", "type": "Concept", "difficulty": "Warm-up", "q": "Define opportunity cost.", "a": "The value of the next-best alternative given up.", "e": "Not every possible alternative—just the next best."}, {"n": 3, "unit": "Module 1", "type": "Calculation", "difficulty": "Warm-up", "q": "You skip 5 hours of work at $20/hour to attend class. Measurable opportunity cost?", "a": "$100.", "e": "5×$20."}, {"n": 4, "unit": "Module 1", "type": "Concept", "difficulty": "Exam-level", "q": "A nonrefundable fee was already paid. What kind of cost is it for a current decision?", "a": "A sunk cost.", "e": "Ignore sunk costs when comparing future marginal benefits and costs."}, {"n": 5, "unit": "Module 1", "type": "Concept", "difficulty": "Exam-level", "q": "Marginal benefit is $18 and marginal cost is $14. Continue the activity?", "a": "Yes.", "e": "Continue while MB ≥ MC."}, {"n": 6, "unit": "Module 1", "type": "Concept", "difficulty": "Warm-up", "q": "Classify a point on, inside, and outside a PPF.", "a": "On = efficient; inside = attainable but inefficient; outside = currently unattainable.", "e": "PPF shows attainable combinations."}, {"n": 7, "unit": "Module 1", "type": "Concept", "difficulty": "Exam-level", "q": "Why is a typical PPF bowed outward?", "a": "Increasing opportunity cost because resources are not equally suited to both goods.", "e": "Specialized resources make tradeoffs steeper."}, {"n": 8, "unit": "Module 1", "type": "Calculation", "difficulty": "Exam-level", "q": "Moving from 8 to 12 laptops reduces wheat from 40 to 28 tons. Opportunity cost per laptop?", "a": "3 tons of wheat.", "e": "12 tons forgone ÷ 4 laptops = 3."}, {"n": 9, "unit": "Module 1", "type": "Concept", "difficulty": "Exam-level", "q": "Classify: 'The unemployment rate is 5%.' Positive or normative?", "a": "Positive.", "e": "It is testable/descriptive."}, {"n": 10, "unit": "Module 1", "type": "Concept", "difficulty": "Exam-level", "q": "Classify: 'The government should reduce unemployment.' Positive or normative?", "a": "Normative.", "e": "It expresses a value judgment."}, {"n": 11, "unit": "Module 1", "type": "Graph/Reasoning", "difficulty": "Stretch", "q": "Technology improves only computer production. How does the PPF change?", "a": "It pivots outward toward the computer axis.", "e": "Maximum production of the other good is unchanged."}, {"n": 12, "unit": "Module 1", "type": "Concept", "difficulty": "Stretch", "q": "Why can a policy improve equality while reducing efficiency?", "a": "Redistribution can narrow differences while weakening incentives to work, save, or invest.", "e": "The tradeoff is possible, not automatic."}, {"n": 13, "unit": "Module 2", "type": "Calculation", "difficulty": "Warm-up", "q": "Ana can make 16 shirts or 8 tables. OC of 1 table?", "a": "2 shirts.", "e": "16÷8=2."}, {"n": 14, "unit": "Module 2", "type": "Calculation", "difficulty": "Warm-up", "q": "Ben can make 9 shirts or 9 tables. OC of 1 table?", "a": "1 shirt.", "e": "9÷9=1."}, {"n": 15, "unit": "Module 2", "type": "Concept", "difficulty": "Exam-level", "q": "Who has comparative advantage in tables using Q13–14?", "a": "Ben.", "e": "Lower opportunity cost: 1 shirt/table vs 2."}, {"n": 16, "unit": "Module 2", "type": "Concept", "difficulty": "Exam-level", "q": "Who has absolute advantage in shirts? In tables?", "a": "Ana in shirts; Ben in tables.", "e": "Compare maximum outputs."}, {"n": 17, "unit": "Module 2", "type": "Concept", "difficulty": "Exam-level", "q": "Can one producer have comparative advantage in both goods in a two-good model?", "a": "No.", "e": "Opportunity costs are reciprocally related."}, {"n": 18, "unit": "Module 2", "type": "Concept", "difficulty": "Exam-level", "q": "What determines specialization?", "a": "Lower opportunity cost / comparative advantage.", "e": "Not absolute advantage alone."}, {"n": 19, "unit": "Module 2", "type": "Calculation", "difficulty": "Exam-level", "q": "If one OC is 1 shirt/table and the other is 2 shirts/table, give a mutually beneficial trade price.", "a": "Any price between 1 and 2 shirts per table, e.g. 1.5.", "e": "Terms of trade must fall between opportunity costs."}, {"n": 20, "unit": "Module 2", "type": "Concept", "difficulty": "Exam-level", "q": "If world price is below a country's no-trade price, import or export?", "a": "Import.", "e": "Foreign sellers offer the good more cheaply."}, {"n": 21, "unit": "Module 2", "type": "Concept", "difficulty": "Stretch", "q": "Who tends to gain and lose when a country begins importing a good?", "a": "Consumers/importers tend to gain; domestic producers/workers in the competing industry may lose.", "e": "Trade creates gains but can redistribute them."}, {"n": 22, "unit": "Module 2", "type": "Calculation", "difficulty": "Stretch", "q": "Country X: 3 labor hours wheat, 9 steel. Country Y: 4 wheat, 8 steel. Who has comparative advantage in steel?", "a": "Country Y.", "e": "X OC steel=3 wheat; Y=2 wheat."}, {"n": 23, "unit": "Modules 3–4", "type": "Concept", "difficulty": "Warm-up", "q": "A good's own price rises and quantity demanded falls. Movement or shift?", "a": "Movement along the demand curve.", "e": "Own-price changes move along the curve."}, {"n": 24, "unit": "Modules 3–4", "type": "Concept", "difficulty": "Warm-up", "q": "Income rises and the good is normal. What happens to demand?", "a": "Demand shifts right.", "e": "Income is a nonprice demand shifter."}, {"n": 25, "unit": "Modules 3–4", "type": "Concept", "difficulty": "Warm-up", "q": "Input prices fall. What happens to supply?", "a": "Supply shifts right.", "e": "Lower production cost increases supply."}, {"n": 26, "unit": "Modules 3–4", "type": "Concept", "difficulty": "Exam-level", "q": "Price is above equilibrium. Surplus or shortage?", "a": "Surplus.", "e": "QS > QD above equilibrium."}, {"n": 27, "unit": "Modules 3–4", "type": "Concept", "difficulty": "Exam-level", "q": "Price is below equilibrium. Surplus or shortage?", "a": "Shortage.", "e": "QD > QS below equilibrium."}, {"n": 28, "unit": "Modules 3–4", "type": "Calculation", "difficulty": "Exam-level", "q": "At $10, QD=95 and QS=65. Size of market condition?", "a": "Shortage of 30 units.", "e": "95−65=30."}, {"n": 29, "unit": "Modules 3–4", "type": "Calculation", "difficulty": "Exam-level", "q": "At $16, QD=55 and QS=85. Size of market condition?", "a": "Surplus of 30 units.", "e": "85−55=30."}, {"n": 30, "unit": "Modules 3–4", "type": "Graph/Reasoning", "difficulty": "Exam-level", "q": "Demand increases, supply unchanged. What happens to equilibrium P and Q?", "a": "Both price and quantity rise.", "e": "Rightward demand shift."}, {"n": 31, "unit": "Modules 3–4", "type": "Graph/Reasoning", "difficulty": "Exam-level", "q": "Supply increases, demand unchanged. What happens to equilibrium P and Q?", "a": "Price falls; quantity rises.", "e": "Rightward supply shift."}, {"n": 32, "unit": "Modules 3–4", "type": "Graph/Reasoning", "difficulty": "Exam-level", "q": "Demand increases while supply decreases. What is certain? What is ambiguous?", "a": "Price rises; quantity is ambiguous.", "e": "Both shifts push price up but have opposite effects on quantity."}, {"n": 33, "unit": "Modules 3–4", "type": "Graph/Reasoning", "difficulty": "Exam-level", "q": "Demand and supply both increase. What is certain? What is ambiguous?", "a": "Quantity rises; price is ambiguous.", "e": "Both shifts raise quantity but have opposite effects on price."}, {"n": 34, "unit": "Modules 3–4", "type": "Concept", "difficulty": "Exam-level", "q": "A decrease in the price of a complement does what to demand for the good?", "a": "Shifts demand right.", "e": "Cheaper complement raises demand for the paired good."}, {"n": 35, "unit": "Modules 3–4", "type": "Concept", "difficulty": "Exam-level", "q": "A rise in the price of a substitute does what to demand for the good?", "a": "Shifts demand right.", "e": "Consumers switch toward this good."}, {"n": 36, "unit": "Modules 3–4", "type": "Calculation", "difficulty": "Exam-level", "q": "Price rises 10→12, QD falls 100→80. Midpoint % change in QD?", "a": "−22.22%.", "e": "−20 ÷ 90 × 100."}, {"n": 37, "unit": "Modules 3–4", "type": "Calculation", "difficulty": "Exam-level", "q": "Using Q36, midpoint % change in price?", "a": "18.18%.", "e": "2 ÷ 11 × 100."}, {"n": 38, "unit": "Modules 3–4", "type": "Calculation", "difficulty": "Exam-level", "q": "Using Q36–37, PED magnitude and classification?", "a": "≈1.22, elastic.", "e": "22.22÷18.18≈1.22."}, {"n": 39, "unit": "Modules 3–4", "type": "Concept", "difficulty": "Exam-level", "q": "If demand is elastic and price falls, what happens to total revenue?", "a": "Total revenue rises.", "e": "Quantity responds proportionally more than price."}, {"n": 40, "unit": "Modules 3–4", "type": "Concept", "difficulty": "Exam-level", "q": "If demand is inelastic and price rises, what happens to total revenue?", "a": "Total revenue rises.", "e": "Quantity falls proportionally less than price rises."}, {"n": 41, "unit": "Modules 3–4", "type": "Concept", "difficulty": "Stretch", "q": "Which is likely more elastic: insulin or one brand of cereal? Why?", "a": "One brand of cereal; it has close substitutes and is less necessary.", "e": "Substitutes and necessity affect elasticity."}, {"n": 42, "unit": "Modules 3–4", "type": "Graph/Reasoning", "difficulty": "Stretch", "q": "Draw a binding price ceiling below equilibrium. What market outcome must appear?", "a": "A shortage: QD > QS.", "e": "Ceiling keeps price below equilibrium."}, {"n": 43, "unit": "Module 5", "type": "Concept", "difficulty": "Warm-up", "q": "State the definition of GDP.", "a": "Market value of all final goods and services produced within a country during a period.", "e": "Final avoids double counting; domestic refers to location."}, {"n": 44, "unit": "Module 5", "type": "Concept", "difficulty": "Warm-up", "q": "Why are used goods excluded from current GDP?", "a": "They were counted when first produced.", "e": "Resale is not new current production."}, {"n": 45, "unit": "Module 5", "type": "Concept", "difficulty": "Warm-up", "q": "Why are intermediate goods usually excluded?", "a": "Their value is embedded in final goods; counting both would double count.", "e": "Use final goods or value added."}, {"n": 46, "unit": "Module 5", "type": "Concept", "difficulty": "Warm-up", "q": "A newly built house counts in which GDP component?", "a": "Investment (I).", "e": "New residential construction is investment."}, {"n": 47, "unit": "Module 5", "type": "Concept", "difficulty": "Warm-up", "q": "A Social Security payment counts as government purchases?", "a": "No; it is a transfer payment.", "e": "Government purchases exclude transfers."}, {"n": 48, "unit": "Module 5", "type": "Calculation", "difficulty": "Exam-level", "q": "C=760, I=190, G=240, exports=95, imports=125. GDP?", "a": "$1,160.", "e": "NX=95−125=−30; 760+190+240−30=1,160."}, {"n": 49, "unit": "Module 5", "type": "Concept", "difficulty": "Exam-level", "q": "An imported phone bought by a household affects which GDP components?", "a": "C increases and imports increase, reducing NX by the same amount.", "e": "The imported good itself does not add domestic production."}, {"n": 50, "unit": "Module 5", "type": "Calculation", "difficulty": "Exam-level", "q": "Base-year price $4; later quantity 150 and current price $5. Later nominal GDP? Real GDP?", "a": "Nominal $750; real $600.", "e": "150×5; 150×4."}, {"n": 51, "unit": "Module 5", "type": "Calculation", "difficulty": "Exam-level", "q": "Using nominal GDP $750 and real GDP $600, what is the GDP deflator?", "a": "125.", "e": "750÷600×100."}, {"n": 52, "unit": "Module 5", "type": "Calculation", "difficulty": "Exam-level", "q": "Real GDP rises from 2,800 to 2,940. What is the growth rate?", "a": "5%.", "e": "140÷2,800×100."}, {"n": 53, "unit": "Module 5", "type": "Calculation", "difficulty": "Exam-level", "q": "Real GDP is $1.2 trillion and population is 40 million. Real GDP per person?", "a": "$30,000.", "e": "1.2T ÷ 40M."}, {"n": 54, "unit": "Module 5", "type": "Concept", "difficulty": "Exam-level", "q": "Nominal GDP rises while real GDP is unchanged. What likely changed?", "a": "Prices rose, not real output.", "e": "Nominal uses current prices; real holds prices constant."}, {"n": 55, "unit": "Module 5", "type": "Concept", "difficulty": "Exam-level", "q": "Does unpaid household childcare count in GDP? Would paid daycare count?", "a": "Unpaid childcare: no. Paid daycare: yes.", "e": "GDP misses valuable nonmarket production."}, {"n": 56, "unit": "Module 5", "type": "Concept", "difficulty": "Exam-level", "q": "Why are imports subtracted in NX?", "a": "To remove foreign production that may already be included in C, I, or G.", "e": "GDP measures domestic production."}, {"n": 57, "unit": "Module 5", "type": "Concept", "difficulty": "Stretch", "q": "GDP per capita rises. Does that prove everyone's living standard rose equally?", "a": "No.", "e": "It is an average and says nothing about distribution."}, {"n": 58, "unit": "Module 5", "type": "Concept", "difficulty": "Stretch", "q": "Name two important things GDP does not measure well.", "a": "Examples: distribution, leisure, household work, environmental damage, health, some quality changes.", "e": "GDP is useful but incomplete as a welfare measure."}, {"n": 59, "unit": "Module 5", "type": "Calculation", "difficulty": "Stretch", "q": "Farmer sells wheat $120, miller sells flour $170, baker sells bread $210. GDP using final-goods method and total value added?", "a": "GDP $210; total value added $210.", "e": "Value added: 120 + 50 + 40 = 210."}, {"n": 60, "unit": "Module 5", "type": "Reasoning", "difficulty": "Stretch", "q": "Why is real GDP better than nominal GDP for comparing production across years?", "a": "It uses base-year prices, removing the effect of price changes.", "e": "Real GDP isolates changes in output."}]};
+
+const state = {
+  subject: localStorage.getItem('oga_subject') || 'ACCT',
+  filter: 'All',
+  difficulty: 'All',
+  attempted: JSON.parse(localStorage.getItem('oga_attempted') || '{}'),
+  correct: JSON.parse(localStorage.getItem('oga_correct') || '{}'),
+  missed: JSON.parse(localStorage.getItem('oga_missed') || '{}'),
+  index: 0,
+  mode: 'practice'
+};
+
+const $ = id => document.getElementById(id);
+const subjectEl=$('subject'), filterEl=$('filter'), diffEl=$('difficulty');
+subjectEl.value = state.subject;
+
+function keyFor(subj, q) { return subj + ':' + q.n; }
+function save() {
+  localStorage.setItem('oga_subject', state.subject);
+  localStorage.setItem('oga_attempted', JSON.stringify(state.attempted));
+  localStorage.setItem('oga_correct', JSON.stringify(state.correct));
+  localStorage.setItem('oga_missed', JSON.stringify(state.missed));
+}
+function uniqueUnits(subj) {
+  return [...new Set(BANK[subj].map(x=>x.unit))];
+}
+function refreshFilters() {
+  filterEl.innerHTML = '<option value="All">All chapters/modules</option>' +
+    uniqueUnits(state.subject).map(x=>`<option value="${x}">${x}</option>`).join('');
+  state.filter = 'All';
+  filterEl.value = 'All';
+}
+function currentSet() {
+  return BANK[state.subject].filter(q =>
+    (state.filter==='All' || q.unit===state.filter) &&
+    (state.difficulty==='All' || q.difficulty===state.difficulty)
+  );
+}
+function currentQuestion() {
+  const set=currentSet();
+  if(!set.length) return null;
+  state.index = Math.min(state.index, set.length-1);
+  return set[state.index];
+}
+function renderQuestion() {
+  state.mode='practice';
+  $('practiceCard').style.display='block';
+  $('queueCard').classList.remove('show');
+  const q=currentQuestion();
+  const set=currentSet();
+  if(!q) {
+    $('question').textContent='No questions match this filter.';
+    $('checkBtn').disabled=true; $('skipBtn').disabled=true;
+    return;
+  }
+  $('checkBtn').disabled=false; $('skipBtn').disabled=false;
+  $('unitPill').textContent=q.unit;
+  $('typePill').textContent=q.type;
+  $('diffPill').textContent=q.difficulty;
+  $('numPill').textContent=`Question ${state.index+1} of ${set.length}`;
+  $('question').textContent=q.q;
+  $('typed').value='';
+  $('result').classList.remove('show');
+  $('correctAnswer').textContent='';
+  $('explain').textContent='';
+  clearCanvas();
+  renderStats();
+}
+function renderStats() {
+  const subj=state.subject;
+  const keys=BANK[subj].map(q=>keyFor(subj,q));
+  const attempted=keys.filter(k=>state.attempted[k]).length;
+  const correct=keys.filter(k=>state.correct[k]).length;
+  const missed=keys.filter(k=>state.missed[k]).length;
+  $('doneStat').textContent=attempted;
+  $('correctStat').textContent=correct;
+  $('missedStat').textContent=missed;
+  $('leftStat').textContent=Math.max(0,currentSet().length - state.index - 1);
+}
+function nextQuestion() {
+  const set=currentSet();
+  if(!set.length) return;
+  state.index = (state.index + 1) % set.length;
+  renderQuestion();
+}
+function checkAnswer() {
+  const q=currentQuestion(); if(!q) return;
+  state.attempted[keyFor(state.subject,q)] = true;
+  $('correctAnswer').textContent=q.a;
+  $('explain').textContent=q.e;
+  $('result').classList.add('show');
+  save(); renderStats();
+}
+function markResult(gotIt) {
+  const q=currentQuestion(); if(!q) return;
+  const k=keyFor(state.subject,q);
+  state.attempted[k]=true;
+  if(gotIt) {
+    state.correct[k]=true;
+    delete state.missed[k];
+  } else {
+    state.missed[k]=true;
+    delete state.correct[k];
+  }
+  save(); renderStats();
+  setTimeout(nextQuestion, 120);
+}
+function renderQueue() {
+  state.mode='queue';
+  $('practiceCard').style.display='none';
+  $('queueCard').classList.add('show');
+  const list=$('queueList');
+  const rows=Object.keys(state.missed)
+    .map(k=>{const [subj,num]=k.split(':'); const q=BANK[subj].find(x=>String(x.n)===num); return q?{subj,q}:null;})
+    .filter(Boolean);
+  if(!rows.length) {
+    list.innerHTML='<p class="small">Nothing in the missed queue. Nice.</p>';
+    return;
+  }
+  list.innerHTML=rows.map(r=>`
+    <div class="queue-item">
+      <b>${r.subj} • ${r.q.unit} • #${r.q.n}</b>
+      <div>${r.q.q}</div>
+      <div class="small" style="margin-top:4px">Answer: ${r.q.a}</div>
+      <button type="button" class="secondary retryBtn" data-subj="${r.subj}" data-n="${r.q.n}" style="margin-top:8px">Retry this one</button>
+    </div>`).join('');
+  list.querySelectorAll('.retryBtn').forEach(btn=>btn.addEventListener('click',()=>{
+    state.subject=btn.dataset.subj; subjectEl.value=state.subject; refreshFilters();
+    state.filter='All'; state.difficulty='All'; diffEl.value='All';
+    const set=currentSet(); state.index=set.findIndex(x=>String(x.n)===btn.dataset.n);
+    save(); renderQuestion();
+  }));
+}
+subjectEl.addEventListener('change',()=>{state.subject=subjectEl.value; state.index=0; refreshFilters(); save(); renderQuestion();});
+filterEl.addEventListener('change',()=>{state.filter=filterEl.value; state.index=0; renderQuestion();});
+diffEl.addEventListener('change',()=>{state.difficulty=diffEl.value; state.index=0; renderQuestion();});
+$('checkBtn').addEventListener('click',checkAnswer);
+$('skipBtn').addEventListener('click',nextQuestion);
+$('gotItBtn').addEventListener('click',()=>markResult(true));
+$('missedItBtn').addEventListener('click',()=>markResult(false));
+$('missedBtn').addEventListener('click',renderQueue);
+$('backBtn').addEventListener('click',renderQuestion);
+$('resetBtn').addEventListener('click',()=>{
+  if(confirm('Reset ALL saved progress and the missed queue?')) {
+    state.attempted={}; state.correct={}; state.missed={}; state.index=0;
+    localStorage.removeItem('oga_attempted'); localStorage.removeItem('oga_correct'); localStorage.removeItem('oga_missed');
+    renderQuestion();
+  }
+});
+
+// Scratchpad: Pencil/mouse draw; finger touch remains for scrolling.
+const canvas=$('pad'), ctx=canvas.getContext('2d');
+let drawing=false, tool='pen', strokes=[], currentStroke=null;
+function resizeCanvas() {
+  const ratio=Math.max(window.devicePixelRatio||1,1);
+  const rect=canvas.getBoundingClientRect();
+  const snapshot=canvas.toDataURL();
+  canvas.width=Math.floor(rect.width*ratio); canvas.height=Math.floor(rect.height*ratio);
+  ctx.setTransform(ratio,0,0,ratio,0,0);
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  if(snapshot && snapshot!=='data:,') {
+    const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,rect.width,rect.height); img.src=snapshot;
+  }
+}
+function pos(e) {
+  const r=canvas.getBoundingClientRect();
+  return {x:e.clientX-r.left,y:e.clientY-r.top};
+}
+function allowedPointer(e) {
+  return e.pointerType==='pen' || e.pointerType==='mouse';
+}
+function begin(e) {
+  if(!allowedPointer(e)) return;
+  drawing=true;
+  if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
+  const p=pos(e);
+  currentStroke={tool,pts:[p]}; strokes.push(currentStroke);
+  ctx.beginPath(); ctx.moveTo(p.x,p.y);
+  e.preventDefault();
+}
+function move(e) {
+  if(!drawing || !allowedPointer(e)) return;
+  const p=pos(e); currentStroke.pts.push(p);
+  ctx.globalCompositeOperation = tool==='eraser' ? 'destination-out' : 'source-over';
+  ctx.strokeStyle='#101812'; ctx.lineWidth=tool==='eraser'?24:3;
+  ctx.lineTo(p.x,p.y); ctx.stroke();
+  e.preventDefault();
+}
+function end(e) {
+  if(!drawing) return;
+  drawing=false; currentStroke=null;
+  try{canvas.releasePointerCapture(e.pointerId)}catch(_e){}
+}
+canvas.addEventListener('pointerdown',begin);
+canvas.addEventListener('pointermove',move);
+canvas.addEventListener('pointerup',end);
+canvas.addEventListener('pointercancel',end);
+canvas.addEventListener('touchstart', e => e.preventDefault(), {passive:false});
+canvas.addEventListener('touchmove', e => e.preventDefault(), {passive:false});
+function redraw() {
+  const r=canvas.getBoundingClientRect();
+  ctx.clearRect(0,0,r.width,r.height);
+  strokes.forEach(s=>{
+    if(s.pts.length<2) return;
+    ctx.beginPath(); ctx.moveTo(s.pts[0].x,s.pts[0].y);
+    ctx.globalCompositeOperation = s.tool==='eraser' ? 'destination-out' : 'source-over';
+    ctx.strokeStyle='#101812'; ctx.lineWidth=s.tool==='eraser'?24:3;
+    s.pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y)); ctx.stroke();
+  });
+  ctx.globalCompositeOperation='source-over';
+}
+function clearCanvas() {
+  strokes=[]; const r=canvas.getBoundingClientRect(); ctx.clearRect(0,0,r.width,r.height);
+}
+$('penBtn').addEventListener('click',()=>{tool='pen';$('penBtn').classList.add('active');$('eraserBtn').classList.remove('active');});
+$('eraserBtn').addEventListener('click',()=>{tool='eraser';$('eraserBtn').classList.add('active');$('penBtn').classList.remove('active');});
+$('undoBtn').addEventListener('click',()=>{strokes.pop();redraw();});
+$('clearBtn').addEventListener('click',clearCanvas);
+
+window.addEventListener('resize',()=>setTimeout(resizeCanvas,80));
+refreshFilters(); diffEl.value='All';
+requestAnimationFrame(()=>{resizeCanvas();renderQuestion();});
+
+if('serviceWorker' in navigator) {
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
