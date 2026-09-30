@@ -119,7 +119,7 @@ linear-gradient(#eef1ef 1px,transparent 1px),linear-gradient(90deg,#eef1ef 1px,t
   <section class="hero">
     <div class="hero-row">
       <div>
-        <div class="brand">Operation Get an A <span style="font-size:12px;vertical-align:middle;background:#fff;color:#18392b;padding:4px 7px;border-radius:999px">v9</span></div>
+        <div class="brand">Operation Get an A <span style="font-size:12px;vertical-align:middle;background:#fff;color:#18392b;padding:4px 7px;border-radius:999px">v10</span></div>
         <div class="tagline">Learn it → work it → prove it → see it again until it sticks.</div>
       </div>
       <div class="hero-badge" id="dailyBadge">Today: 0 reps</div>
@@ -259,6 +259,13 @@ linear-gradient(#eef1ef 1px,transparent 1px),linear-gradient(90deg,#eef1ef 1px,t
         <div id="reference" class="reference"></div>
       </section>
 
+
+      <section class="card">
+        <div class="side-title">Learn by Chapter / Module</div>
+        <div class="small" style="margin-bottom:9px">Pick exactly what you want to learn. This switches to Learn Mode and studies only that chapter or module.</div>
+        <div id="learnUnitButtons" class="quick-buttons"></div>
+      </section>
+
       <section class="card">
         <div class="side-title">Mastery by Chapter / Module</div>
         <div id="masteryList"></div>
@@ -271,7 +278,7 @@ linear-gradient(#eef1ef 1px,transparent 1px),linear-gradient(90deg,#eef1ef 1px,t
       </section>
     </aside>
   </div>
-  <div class="footer">Progress is saved in this browser on this device. • Build v9</div>
+  <div class="footer">Progress is saved in this browser on this device. • Build v10</div>
 </div>
 
 <script>
@@ -350,7 +357,9 @@ const state={
   daily:load("oga_daily",{}), streak:load("oga_streak",0),
   currentSet:[], currentIndex:0, selected:null,
   sessionDone:0, sessionTarget:20, examAnswers:[], examMode:false, reviewOnly:false,
-  matchSet:[], matchSetNumber:0, matchSelectedLeft:null, matchSelectedRight:null, matchAttempts:0, matchCorrect:0
+  matchSet:[], matchSetNumber:0, matchSelectedLeft:null, matchSelectedRight:null,
+  matchAttempts:0, matchCorrect:0,
+  matchMastery:load("oga_match_mastery",{})
 };
 
 function keyFor(subj,q){return subj+":"+q.n}
@@ -358,7 +367,11 @@ function qStat(k){return state.stats[k]||{seen:0,correct:0,wrong:0,sortof:0}}
 function mastery(k){return state.mastery[k]||0}
 function save(){
   localStorage.setItem("oga_subject",state.subject);
-  store("oga_mastery",state.mastery);store("oga_stats",state.stats);store("oga_daily",state.daily);store("oga_streak",state.streak);
+  store("oga_mastery",state.mastery);
+  store("oga_stats",state.stats);
+  store("oga_daily",state.daily);
+  store("oga_streak",state.streak);
+  store("oga_match_mastery",state.matchMastery);
 }
 function units(){
   if(state.mode==="termsMatch") return [...new Set(MATCH_BANK[state.subject].terms.map(x=>x.unit))];
@@ -494,7 +507,12 @@ function matchPool(){
 function buildMatchSet(){
   const pool=matchPool();
   const count=Math.min(5,pool.length);
-  state.matchSet=shuffle(pool).slice(0,count).map((x,i)=>({...x,id:"m"+Date.now()+"_"+i,matched:false}));
+  state.matchSet=shuffle(pool).slice(0,count).map((x,i)=>({
+    ...x,
+    id:"m"+Date.now()+"_"+i,
+    stableKey:state.subject+"|"+state.mode+"|"+x.unit+"|"+x.front,
+    matched:false
+  }));
   state.matchSetNumber++;
   state.matchSelectedLeft=null;state.matchSelectedRight=null;
   renderMatchSet();
@@ -538,11 +556,27 @@ function gradeMatch(){
   const rightBtn=document.querySelector(`#matchRight [data-id="${rightId}"]`);
   if(good){
     state.matchCorrect++;
-    const item=state.matchSet.find(x=>x.id===leftId); if(item)item.matched=true;
+    const item=state.matchSet.find(x=>x.id===leftId);
+    if(item){
+      item.matched=true;
+      const cur=state.matchMastery[item.stableKey]||{correct:0,wrong:0,mastered:false};
+      cur.correct++;
+      if(cur.correct>=2 && cur.correct>cur.wrong) cur.mastered=true;
+      state.matchMastery[item.stableKey]=cur;
+      save();
+    }
     $("matchStatus").innerHTML="<b>✅ Correct match.</b>";
     $("matchStatus").className="match-status good";
     setTimeout(()=>{state.matchSelectedLeft=null;state.matchSelectedRight=null;renderMatchSet()},250);
   }else{
+    const item=state.matchSet.find(x=>x.id===leftId);
+    if(item){
+      const cur=state.matchMastery[item.stableKey]||{correct:0,wrong:0,mastered:false};
+      cur.wrong++;
+      cur.mastered=false;
+      state.matchMastery[item.stableKey]=cur;
+      save();
+    }
     [leftBtn,rightBtn].forEach(b=>{if(b)b.classList.add("wrongflash")});
     $("matchStatus").innerHTML="<b>❌ Not a match.</b> Try those again.";
     $("matchStatus").className="match-status";
@@ -650,12 +684,61 @@ function renderAllStats(){
   const reps=state.daily[todayKey()]||0;$("dailyBadge").textContent=`Today: ${reps} reps`;$("todayReps").textContent=`${reps} reps today`;$("todayBar").style.width=Math.min(100,reps/20*100)+"%";
   renderMastery();
 }
+
+function renderLearnUnitButtons(){
+  const unitList=[...new Set(BANK[state.subject].map(q=>q.unit))];
+  $("learnUnitButtons").innerHTML=unitList.map(u=>
+    `<button type="button" class="secondary learnUnitBtn" data-unit="${escapeAttr(u)}">Learn ${escapeHtml(u)}</button>`
+  ).join("");
+  document.querySelectorAll(".learnUnitBtn").forEach(btn=>btn.addEventListener("click",()=>{
+    state.mode="learn";
+    $("mode").value="learn";
+    $("difficulty").disabled=false;
+    $("sessionLength").disabled=false;
+    refreshFilters();
+    state.filter=btn.dataset.unit;
+    $("filter").value=state.filter;
+    buildSession(true);
+    window.scrollTo({top:0,behavior:"smooth"});
+  }));
+}
+
 function renderMastery(){
-  $("masteryList").innerHTML=units().map(u=>{
-    const qs=BANK[state.subject].filter(q=>q.unit===u),score=qs.reduce((a,q)=>a+mastery(keyFor(state.subject,q)),0),pct=Math.round(score/(qs.length*3)*100);
-    return `<div class="mastery-row"><div class="mastery-top"><b>${u}</b><span>${pct}%</span></div><div class="mini-track"><div class="mini-bar" style="width:${pct}%"></div></div></div>`;
+  const matchMode=(state.mode==="termsMatch"||state.mode==="formulaMatch");
+
+  if(matchMode){
+    const kind=state.mode==="formulaMatch"?"formulas":"terms";
+    const pool=MATCH_BANK[state.subject][kind];
+    const byUnit=[...new Set(pool.map(x=>x.unit))];
+
+    $("masteryList").innerHTML=byUnit.map(u=>{
+      const items=pool.filter(x=>x.unit===u);
+      const masteredCount=items.filter(x=>{
+        const k=state.subject+"|"+state.mode+"|"+x.unit+"|"+x.front;
+        return state.matchMastery[k]?.mastered===true;
+      }).length;
+      const pct=items.length?Math.round(masteredCount/items.length*100):0;
+      return `<div class="mastery-row">
+        <div class="mastery-top"><b>${u}</b><span>${pct}%</span></div>
+        <div class="mini-track"><div class="mini-bar" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join("");
+    return;
+  }
+
+  const normalUnits=[...new Set(BANK[state.subject].map(q=>q.unit))];
+  $("masteryList").innerHTML=normalUnits.map(u=>{
+    const qs=BANK[state.subject].filter(q=>q.unit===u);
+    const maxScore=qs.length*3;
+    const score=qs.reduce((a,q)=>a+mastery(keyFor(state.subject,q)),0);
+    const pct=maxScore?Math.round(score/maxScore*100):0;
+    return `<div class="mastery-row">
+      <div class="mastery-top"><b>${u}</b><span>${pct}%</span></div>
+      <div class="mini-track"><div class="mini-bar" style="width:${pct}%"></div></div>
+    </div>`;
   }).join("");
 }
+
 function renderReference(){
   const box=$("reference");box.classList.toggle("show");
   if(!box.classList.contains("show"))return;
@@ -678,7 +761,13 @@ function drillWeak(){
 }
 
 $("subject").value=state.subject;
-$("subject").addEventListener("change",()=>{state.subject=$("subject").value;localStorage.setItem("oga_subject",state.subject);refreshFilters();buildSession(true)});
+$("subject").addEventListener("change",()=>{
+  state.subject=$("subject").value;
+  localStorage.setItem("oga_subject",state.subject);
+  refreshFilters();
+  renderLearnUnitButtons();
+  buildSession(true);
+});
 $("mode").addEventListener("change",()=>{
   state.mode=$("mode").value;
   refreshFilters();
@@ -697,7 +786,8 @@ $("backBtn").onclick=()=>{ $("queueCard").classList.remove("show");$("practiceCa
 $("reviewExamBtn").onclick=reviewExamMisses;$("newExamBtn").onclick=()=>{state.mode="exam";$("mode").value="exam";buildSession(true)};
 $("newMatchSetBtn").onclick=buildMatchSet;
 $("shuffleMatchBtn").onclick=renderMatchSet;
-$("resetBtn").onclick=()=>{if(confirm("Reset ALL mastery, stats, streaks, and daily progress?")){["oga_mastery","oga_stats","oga_daily","oga_streak"].forEach(k=>localStorage.removeItem(k));state.mastery={};state.stats={};state.daily={};state.streak=0;buildSession(true)}};
+$("resetBtn").onclick=()=>{if(confirm("Reset ALL mastery, stats, streaks, and daily progress?")){["oga_mastery","oga_stats","oga_daily","oga_streak","oga_match_mastery"].forEach(k=>localStorage.removeItem(k));
+state.mastery={};state.stats={};state.daily={};state.streak=0;state.matchMastery={};buildSession(true)}};
 
 // Scratchpad
 const canvas=$("pad"),ctx=canvas.getContext("2d");let drawing=false,tool="pen",strokes=[],currentStroke=null;
@@ -716,7 +806,9 @@ $("eraserBtn").onclick=()=>{tool="eraser";$("eraserBtn").classList.add("active")
 $("undoBtn").onclick=()=>{strokes.pop();redraw()};$("clearBtn").onclick=clearCanvas;
 window.addEventListener("resize",()=>setTimeout(resizeCanvas,80));
 
-refreshFilters();requestAnimationFrame(()=>{resizeCanvas();buildSession(true)});
+refreshFilters();
+renderLearnUnitButtons();
+requestAnimationFrame(()=>{resizeCanvas();buildSession(true)});
 // Service worker intentionally disabled in v7 while we stabilize updates.
 </script>
 
