@@ -112,6 +112,16 @@ linear-gradient(#eef1ef 1px,transparent 1px),linear-gradient(90deg,#eef1ef 1px,t
 .match-footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 @media(max-width:700px){.match-board{grid-template-columns:1fr}}
 
+
+.inline-match-board{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+.inline-match-column{display:grid;gap:9px;align-content:start}
+.inline-match-item{width:100%;text-align:left;background:#fff;border:2px solid var(--border);border-radius:13px;padding:12px;min-height:56px}
+.inline-match-item.selected{border-color:var(--green);background:#eef6f1}
+.inline-match-item.matched{border-color:#8fc4a2;background:#eaf7ee;opacity:.72}
+.inline-match-item.wrongflash{border-color:#cf7d7d;background:#fff0f0}
+.inline-match-status{margin-top:10px;padding:10px 12px;border-radius:12px;background:#f7faf7;border:1px solid var(--border)}
+@media(max-width:700px){.inline-match-board{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -119,7 +129,7 @@ linear-gradient(#eef1ef 1px,transparent 1px),linear-gradient(90deg,#eef1ef 1px,t
   <section class="hero">
     <div class="hero-row">
       <div>
-        <div class="brand">Operation Get an A <span style="font-size:12px;vertical-align:middle;background:#fff;color:#18392b;padding:4px 7px;border-radius:999px">v10</span></div>
+        <div class="brand">Operation Get an A <span style="font-size:12px;vertical-align:middle;background:#fff;color:#18392b;padding:4px 7px;border-radius:999px">v11</span></div>
         <div class="tagline">Learn it → work it → prove it → see it again until it sticks.</div>
       </div>
       <div class="hero-badge" id="dailyBadge">Today: 0 reps</div>
@@ -278,7 +288,7 @@ linear-gradient(#eef1ef 1px,transparent 1px),linear-gradient(90deg,#eef1ef 1px,t
       </section>
     </aside>
   </div>
-  <div class="footer">Progress is saved in this browser on this device. • Build v10</div>
+  <div class="footer">Progress is saved in this browser on this device. • Build v11</div>
 </div>
 
 <script>
@@ -359,7 +369,8 @@ const state={
   sessionDone:0, sessionTarget:20, examAnswers:[], examMode:false, reviewOnly:false,
   matchSet:[], matchSetNumber:0, matchSelectedLeft:null, matchSelectedRight:null,
   matchAttempts:0, matchCorrect:0,
-  matchMastery:load("oga_match_mastery",{})
+  matchMastery:load("oga_match_mastery",{}),
+  inlineClassify:null
 };
 
 function keyFor(subj,q){return subj+":"+q.n}
@@ -417,6 +428,7 @@ function buildSession(force=false){
 function currentQuestion(){return state.currentSet[state.currentIndex]||null}
 function shortAnswer(q){return q.a.length<=58&&!/[;\n]/.test(q.a)&&!q.a.includes(":")}
 function answerKind(q){
+  if(/^classify\s*:/i.test(String(q.q||"")) && String(q.a||"").includes(";")) return "classifyMatch";
   if(String(q.type||"").trim().toLowerCase()==="journal entry") return "choice";
   const t=String(q.type||"").toLowerCase();
   const text=String(q.q||"").toLowerCase();
@@ -456,13 +468,87 @@ function candidateOptions(q){
   }
   return shuffle([correct,...distract]);
 }
+
+function normalizeClassLabel(s){
+  return normalize(String(s||"")
+    .replace(/product\/oh/ig,"product cost; factory overhead")
+    .replace(/product\/direct labor/ig,"product cost; direct labor")
+    .replace(/^period$/ig,"period cost"));
+}
+function parseClassification(q){
+  const prompt=String(q.q||"").replace(/^classify\s*:\s*/i,"").replace(/\.$/,"");
+  const items=prompt.split(",").map(x=>x.trim()).filter(Boolean);
+  const answers=String(q.a||"").replace(/\.$/,"").split(";").map(x=>x.trim()).filter(Boolean);
+  if(items.length!==answers.length) return null;
+  return items.map((item,i)=>({id:"c"+i,item,answer:answers[i],matched:false}));
+}
+function renderInlineClassification(q,area){
+  const pairs=parseClassification(q);
+  if(!pairs){ area.innerHTML='<div class="small">Classification matching could not load for this question.</div>'; return; }
+  state.inlineClassify={pairs,left:null,right:null,attempts:0,correct:0};
+  const right=shuffle(pairs.map((p,i)=>({rid:"r"+i,label:p.answer})));
+  area.innerHTML=`
+    <div class="small" style="margin-bottom:7px"><b>Match each item to its classification.</b></div>
+    <div class="inline-match-board">
+      <div><div class="match-label">ITEM</div><div id="inlineLeft" class="inline-match-column">
+        ${pairs.map(p=>`<button type="button" class="inline-match-item" data-id="${p.id}" data-side="left">${escapeHtml(p.item)}</button>`).join("")}
+      </div></div>
+      <div><div class="match-label">CLASSIFICATION</div><div id="inlineRight" class="inline-match-column">
+        ${right.map(r=>`<button type="button" class="inline-match-item" data-rid="${r.rid}" data-label="${escapeAttr(r.label)}" data-side="right">${escapeHtml(r.label)}</button>`).join("")}
+      </div></div>
+    </div>
+    <div id="inlineMatchStatus" class="inline-match-status">${pairs.length} matches to go.</div>`;
+  area.querySelectorAll(".inline-match-item").forEach(btn=>btn.addEventListener("click",()=>selectInlineMatch(btn,q)));
+}
+function selectInlineMatch(btn,q){
+  const c=state.inlineClassify;if(!c)return;
+  if(btn.dataset.side==="left"){
+    document.querySelectorAll("#inlineLeft .inline-match-item").forEach(b=>b.classList.remove("selected"));
+    btn.classList.add("selected");c.left=btn.dataset.id;
+  }else{
+    document.querySelectorAll("#inlineRight .inline-match-item").forEach(b=>b.classList.remove("selected"));
+    btn.classList.add("selected");c.right={rid:btn.dataset.rid,label:btn.dataset.label};
+  }
+  if(c.left&&c.right) gradeInlineMatch(q);
+}
+function gradeInlineMatch(q){
+  const c=state.inlineClassify;
+  const pair=c.pairs.find(p=>p.id===c.left);
+  const leftBtn=document.querySelector(`#inlineLeft [data-id="${c.left}"]`);
+  const rightBtn=document.querySelector(`#inlineRight [data-rid="${c.right.rid}"]`);
+  c.attempts++;
+  const good=normalizeClassLabel(pair.answer)===normalizeClassLabel(c.right.label);
+  if(good){
+    pair.matched=true;c.correct++;
+    leftBtn.classList.add("matched");rightBtn.classList.add("matched");
+    leftBtn.disabled=true;rightBtn.disabled=true;
+    const remaining=c.pairs.filter(p=>!p.matched).length;
+    $("inlineMatchStatus").innerHTML=remaining?`✅ Correct. ${remaining} match${remaining===1?"":"es"} to go.`:`<b>✅ All matched.</b> ${c.correct} correct matches in ${c.attempts} attempts.`;
+    c.left=null;c.right=null;
+    document.querySelectorAll(".inline-match-item").forEach(b=>b.classList.remove("selected"));
+    if(remaining===0){
+      $("checkBtn").textContent="Finish Question";
+      $("checkBtn").classList.add("good");
+    }
+  }else{
+    [leftBtn,rightBtn].forEach(b=>b.classList.add("wrongflash"));
+    $("inlineMatchStatus").innerHTML="❌ Not a match. Try those again.";
+    setTimeout(()=>{
+      [leftBtn,rightBtn].forEach(b=>b.classList.remove("wrongflash","selected"));
+      c.left=null;c.right=null;
+    },450);
+  }
+}
+
 function renderAnswerInput(q){
   // Absolute override: every Journal Entry question is multiple choice.
   const journalOverride=String(q.type||"").trim().toLowerCase()==="journal entry";
   state.selected=null;
   const kind=journalOverride?"choice":answerKind(q),area=$("answerArea");
   $("checkBtn").textContent=state.examMode?"Lock In Answer":state.mode==="learn"?"Check & Learn":"Check Answer";
-  if(kind==="dropdown"){
+  if(kind==="classifyMatch"){
+    renderInlineClassification(q,area);
+  }else if(kind==="dropdown"){
     const opts=candidateOptions(q);
     area.innerHTML=`<label><b>Choose the best answer</b></label><select id="dropAnswer"><option value="">Select an answer…</option>${opts.map(o=>`<option value="${escapeAttr(o)}">${escapeHtml(o)}</option>`).join("")}</select>`;
   }else if(kind==="choice"){
@@ -480,6 +566,10 @@ function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":
 function escapeAttr(s){return escapeHtml(s)}
 function getUserAnswer(q){
   const kind=answerKind(q);
+  if(kind==="classifyMatch"){
+    const c=state.inlineClassify;
+    return c && c.pairs.every(p=>p.matched) ? "__MATCH_COMPLETE__" : "";
+  }
   if(kind==="dropdown") return $("dropAnswer")?.value||"";
   if(kind==="choice") return state.selected||"";
   return $("typedAnswer")?.value||"";
@@ -487,6 +577,7 @@ function getUserAnswer(q){
 function autoGrade(q,ans){
   if(!ans.trim()) return null;
   const kind=answerKind(q);
+  if(kind==="classifyMatch") return ans==="__MATCH_COMPLETE__";
   if(kind==="choice"||kind==="dropdown") return normalize(ans)===normalize(q.a);
   if(q.type==="Calculation"){
     const ua=numericish(ans),ca=numericish(q.a);
@@ -606,6 +697,7 @@ function renderQuestion(){
   $("modeNote").innerHTML=state.examMode?"No peeking: answers and explanations stay hidden until you finish the mock exam.":state.mode==="learn"?"Learn mode: answer first, then the app teaches from the explanation and keeps weak material in rotation.":"Answer first. The app will auto-grade choices/calculations when it can and make you self-grade longer answers.";
   $("hintBtn").style.display=state.examMode?"none":"";
   $("skipBtn").textContent=state.examMode?"Skip for Now":"Skip";
+  $("checkBtn").className="primary";
   $("examBanner").classList.toggle("show",state.examMode);
   renderAnswerInput(q);clearCanvas();renderAllStats();
 }
@@ -613,7 +705,10 @@ function checkAnswer(){
   const q=currentQuestion();if(!q)return;
   const k=keyFor(state.subject,q);
   const ans=getUserAnswer(q);
-  if(!ans.trim()){alert("Put in an answer first — even a guess. Guessing is part of learning.");return}
+  if(!ans.trim()){
+    if(answerKind(q)==="classifyMatch"){alert("Finish matching all of the items first.");return}
+    alert("Put in an answer first — even a guess. Guessing is part of learning.");return
+  }
   recordSeen(k);
   const graded=autoGrade(q,ans);
   if(state.examMode){
