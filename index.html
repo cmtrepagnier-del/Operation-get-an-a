@@ -157,7 +157,7 @@ linear-gradient(#eef1ef 1px,transparent 1px),linear-gradient(90deg,#eef1ef 1px,t
   <section class="hero">
     <div class="hero-row">
       <div>
-        <div class="brand">Operation Get an A <span style="font-size:12px;vertical-align:middle;background:#fff;color:#18392b;padding:4px 7px;border-radius:999px">v19</span></div>
+        <div class="brand">Operation Get an A <span style="font-size:12px;vertical-align:middle;background:#fff;color:#18392b;padding:4px 7px;border-radius:999px">v20</span></div>
         <div class="tagline">Learn it → work it → prove it → see it again until it sticks.</div>
       </div>
       <div class="hero-badge" id="dailyBadge">Today: 0 reps</div>
@@ -1420,6 +1420,132 @@ requestAnimationFrame(()=>{resizeCanvas();buildSession(true)});
       for(const k of keys) await caches.delete(k);
     }
   }catch(e){}
+})();
+</script>
+
+<style>
+/* v20 interactive ECON Graph Lab */
+#graphLab .graphlab-shell{display:grid;gap:14px}
+#graphLab .gl-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#graphLab .gl-toolbar button{min-height:44px}
+#graphLab .gl-question{font-size:18px;font-weight:900;line-height:1.35;margin:4px 0 8px}
+#graphLab .gl-instructions{font-size:13px;color:var(--muted);margin-bottom:8px}
+#graphLab .gl-stage{background:#fff;border:1px solid var(--border);border-radius:16px;padding:10px;overflow:hidden}
+#graphLab .gl-stage svg{width:100%;max-width:720px;height:auto;display:block;margin:0 auto;touch-action:none;user-select:none}
+#graphLab .gl-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+#graphLab .gl-controls label{font-weight:800;font-size:13px;display:grid;gap:5px}
+#graphLab .gl-controls select,#graphLab .gl-controls input{width:100%}
+#graphLab .gl-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+#graphLab .gl-feedback{display:none;margin-top:12px;padding:12px;border-radius:12px;border:1px solid var(--border);font-weight:750;line-height:1.35}
+#graphLab .gl-feedback.show{display:block}
+#graphLab .gl-feedback.good{background:#eaf7ee;border-color:#9bc6a8;color:#145c33}
+#graphLab .gl-feedback.bad{background:#fff0f0;border-color:#d7a0a0;color:#8d2727}
+#graphLab .gl-hint{display:none;margin-top:10px;padding:10px;border-radius:12px;background:#fff9e9;border:1px solid #e9d8a6}
+#graphLab .gl-hint.show{display:block}
+#graphLab .gl-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);padding:6px 9px;border-radius:999px;font-size:12px;font-weight:800;background:#fff}
+#graphLab .draggable-curve{cursor:grab;touch-action:none;stroke-width:10;stroke-linecap:round;opacity:.95}
+#graphLab .draggable-curve:active{cursor:grabbing}
+#graphLab .curve-hit{stroke:transparent;stroke-width:28;cursor:grab;touch-action:none}
+#graphLab .ppf-tap-zone{fill:transparent;cursor:crosshair;touch-action:none}
+#graphLab .tap-dot{pointer-events:none}
+#graphLab .tot-wrap{padding:18px 4px 8px}
+#graphLab .tot-line{position:relative;height:70px;margin:12px 22px 0}
+#graphLab .tot-line:before{content:"";position:absolute;left:0;right:0;top:25px;height:5px;border-radius:5px;background:#d9dfdb}
+#graphLab .tot-good{position:absolute;top:25px;height:5px;background:#9bc6a8}
+#graphLab .tot-marker{position:absolute;top:6px;transform:translateX(-50%);font-size:12px;font-weight:900;text-align:center;white-space:nowrap}
+#graphLab .tot-marker:after{content:"";display:block;width:3px;height:26px;background:#17201c;margin:3px auto 0}
+#graphLab input[type=range]{width:100%;accent-color:var(--green)}
+@media(max-width:650px){#graphLab .gl-controls{grid-template-columns:1fr}#graphLab .gl-question{font-size:17px}}
+</style>
+<script>
+(function(){
+  const $g=id=>document.getElementById(id);
+  let glIndex=0;
+  let glState={};
+  const GL_TASKS=[
+    {type:'sd',title:'Supply & Demand: shift the curve',prompt:'Consumer income rises for a NORMAL good. Move the correct curve to show the change, then predict the new equilibrium.',target:{curve:'D',dir:1,p:'up',q:'up'},hint:'Income is a demand determinant. For a normal good, higher income increases demand. The supply curve does not move.'},
+    {type:'sd',title:'Supply & Demand: shift the curve',prompt:'The cost of a key input used to make the product rises. Move the correct curve, then predict the new equilibrium.',target:{curve:'S',dir:-1,p:'up',q:'down'},hint:'Input costs are a supply determinant. Higher production costs reduce supply.'},
+    {type:'sd',title:'Supply & Demand: movement vs. shift',prompt:'The price of the good itself rises. Should the DEMAND curve move?',target:{curve:'NONE',dir:0,p:'na',q:'down'},movement:true,hint:'A change in the good’s own price changes quantity demanded. It causes movement ALONG the existing demand curve, not a shift of demand.'},
+    {type:'ppf',title:'PPF: place the point',prompt:'Tap an INEFFICIENT point on the production possibilities frontier graph.',target:'inside',hint:'An inefficient point is attainable but leaves resources unused. It sits inside the PPF.'},
+    {type:'ppf',title:'PPF: place the point',prompt:'Tap an UNATTAINABLE point with current resources.',target:'outside',hint:'An unattainable point lies beyond the PPF — outside the current production boundary.'},
+    {type:'ppf',title:'PPF: place the point',prompt:'Tap an EFFICIENT point.',target:'on',hint:'An efficient point uses resources fully and lies on the PPF.'},
+    {type:'tot',title:'Terms of Trade: set the exchange rate',prompt:'Texaland’s opportunity cost of 1 wheat is 2.00 beef. Oklahomia’s is 1.33 beef. Drag the trade-rate slider to a mutually beneficial price for 1 wheat.',lo:1.33,hi:2.00,hint:'Both sides gain only when the trade price is strictly between their opportunity costs.'}
+  ];
+  function pct(v,min=.5,max=3){return ((v-min)/(max-min))*100}
+  function baseAxes(){return '<line x1="55" y1="300" x2="520" y2="300" stroke="#333" stroke-width="3"/><line x1="55" y1="300" x2="55" y2="25" stroke="#333" stroke-width="3"/><text x="488" y="330" font-size="18">Quantity</text><text x="12" y="40" font-size="18">Price</text>'}
+  function renderSD(t){
+    glState={dxD:0,dxS:0,drag:null};
+    const content=$g('graphLabContent');
+    content.innerHTML=`<div class="graphlab-shell">
+      <div><span class="gl-chip">Interactive • Apple Pencil / touch</span><div class="gl-question">${t.prompt}</div><div class="gl-instructions">Drag the D or S curve left/right. Then choose what happens to equilibrium price and quantity.</div></div>
+      <div class="gl-stage"><svg id="glSD" viewBox="0 0 580 360" aria-label="Interactive supply and demand graph">
+        ${baseAxes()}
+        <g id="dGroup"><line class="draggable-curve" x1="125" y1="70" x2="455" y2="275" stroke="#24513d"/><line class="curve-hit" x1="125" y1="70" x2="455" y2="275"/><text x="450" y="288" font-size="18" font-weight="800">D</text></g>
+        <g id="sGroup"><line class="draggable-curve" x1="125" y1="275" x2="455" y2="70" stroke="#555"/><line class="curve-hit" x1="125" y1="275" x2="455" y2="70"/><text x="450" y="67" font-size="18" font-weight="800">S</text></g>
+        <circle cx="290" cy="172.5" r="7" fill="#111"/><text x="302" y="165" font-size="14">E₁</text>
+      </svg></div>
+      <div class="gl-controls">
+        <label>Equilibrium price<select id="glP"><option value="">Choose…</option><option value="up">Rises ↑</option><option value="down">Falls ↓</option><option value="same">Stays the same</option><option value="na">Not enough information / not applicable</option></select></label>
+        <label>Equilibrium quantity<select id="glQ"><option value="">Choose…</option><option value="up">Rises ↑</option><option value="down">Falls ↓</option><option value="same">Stays the same</option></select></label>
+      </div>
+      <div class="gl-actions"><button id="glCheck" class="primary">Check Graph</button><button id="glHint" class="gold">Legit Hint</button><button id="glReset" class="secondary">Reset Graph</button><button id="glNext" class="secondary">Next Graph</button></div>
+      <div id="glHintBox" class="gl-hint"></div><div id="glFeedback" class="gl-feedback"></div>
+    </div>`;
+    const svg=$g('glSD');
+    function setTransform(){ $g('dGroup').setAttribute('transform',`translate(${glState.dxD} 0)`); $g('sGroup').setAttribute('transform',`translate(${glState.dxS} 0)`); }
+    function startDrag(e,curve){glState.drag={curve,startX:e.clientX,startDX:curve==='D'?glState.dxD:glState.dxS};e.currentTarget.setPointerCapture?.(e.pointerId);e.preventDefault()}
+    function moveDrag(e){if(!glState.drag)return;const dx=Math.max(-90,Math.min(90,glState.drag.startDX+(e.clientX-glState.drag.startX)*(580/svg.getBoundingClientRect().width)));if(glState.drag.curve==='D')glState.dxD=dx;else glState.dxS=dx;setTransform();e.preventDefault()}
+    function stopDrag(){glState.drag=null}
+    [...svg.querySelectorAll('#dGroup .curve-hit,#dGroup .draggable-curve')].forEach(el=>el.addEventListener('pointerdown',e=>startDrag(e,'D')));
+    [...svg.querySelectorAll('#sGroup .curve-hit,#sGroup .draggable-curve')].forEach(el=>el.addEventListener('pointerdown',e=>startDrag(e,'S')));
+    svg.addEventListener('pointermove',moveDrag);svg.addEventListener('pointerup',stopDrag);svg.addEventListener('pointercancel',stopDrag);
+    $g('glCheck').onclick=()=>{
+      const d=Math.abs(glState.dxD)<18?0:(glState.dxD>0?1:-1),s=Math.abs(glState.dxS)<18?0:(glState.dxS>0?1:-1);
+      let graphOK=false;
+      if(t.target.curve==='D')graphOK=d===t.target.dir&&s===0;
+      if(t.target.curve==='S')graphOK=s===t.target.dir&&d===0;
+      if(t.target.curve==='NONE')graphOK=d===0&&s===0;
+      const p=$g('glP').value,q=$g('glQ').value;
+      const answerOK=t.movement ? (graphOK && q==='down') : (graphOK&&p===t.target.p&&q===t.target.q);
+      feedback(answerOK, answerOK?'Yes — your graph and equilibrium result are right.':t.movement?'Not yet. The demand curve should stay put. A higher own-price means move UP/LEFT along the same demand curve, so quantity demanded falls.':`Not yet. Move only ${t.target.curve}, ${t.target.dir>0?'to the RIGHT':'to the LEFT'}, then use the new intersection to determine price and quantity.`);
+    };
+    $g('glHint').onclick=()=>showHint(t.hint);$g('glReset').onclick=()=>{glState.dxD=0;glState.dxS=0;setTransform();$g('glP').value='';$g('glQ').value='';clearFB()};$g('glNext').onclick=nextGL;
+  }
+  function ppfCurveY(x){const u=(x-75)/400;return 55+220*u*u}
+  function renderPPF(t){
+    glState={pt:null};
+    $g('graphLabContent').innerHTML=`<div class="graphlab-shell"><div><span class="gl-chip">Tap the graph</span><div class="gl-question">${t.prompt}</div><div class="gl-instructions">Tap exactly where you would place the point. You can tap again to move it.</div></div>
+    <div class="gl-stage"><svg id="glPPF" viewBox="0 0 580 360"><line x1="55" y1="300" x2="520" y2="300" stroke="#333" stroke-width="3"/><line x1="55" y1="300" x2="55" y2="25" stroke="#333" stroke-width="3"/><path d="M75 55 Q280 70 475 275" fill="none" stroke="#24513d" stroke-width="6"/><text x="455" y="330" font-size="18">Good X</text><text x="12" y="40" font-size="18">Good Y</text><rect id="ppfTap" class="ppf-tap-zone" x="56" y="26" width="463" height="273"/><circle id="ppfDot" class="tap-dot" cx="-50" cy="-50" r="8" fill="#a57920"/></svg></div>
+    <div class="gl-actions"><button id="glCheck" class="primary">Check Point</button><button id="glHint" class="gold">Legit Hint</button><button id="glReset" class="secondary">Clear Point</button><button id="glNext" class="secondary">Next Graph</button></div><div id="glHintBox" class="gl-hint"></div><div id="glFeedback" class="gl-feedback"></div></div>`;
+    const svg=$g('glPPF');
+    $g('ppfTap').addEventListener('pointerdown',e=>{const r=svg.getBoundingClientRect(),x=(e.clientX-r.left)*580/r.width,y=(e.clientY-r.top)*360/r.height;glState.pt={x,y};$g('ppfDot').setAttribute('cx',x);$g('ppfDot').setAttribute('cy',y);clearFB();e.preventDefault()});
+    $g('glCheck').onclick=()=>{if(!glState.pt){feedback(false,'Tap a point on the graph first.');return}const {x,y}=glState.pt;if(x<75||x>475){feedback(false,'Keep the point within the production range shown by the PPF.');return}const yc=ppfCurveY(x),dist=y-yc;let cls=Math.abs(dist)<=18?'on':(dist>18?'inside':'outside');feedback(cls===t.target,cls===t.target?`Yes — that point is ${t.target==='on'?'efficient':t.target==='inside'?'inefficient':'unattainable'} relative to the PPF.`:`That point is ${cls==='on'?'on the PPF (efficient)':cls==='inside'?'inside the PPF (inefficient)':'outside the PPF (unattainable)'}. Try again.`)};
+    $g('glHint').onclick=()=>showHint(t.hint);$g('glReset').onclick=()=>{glState.pt=null;$g('ppfDot').setAttribute('cx',-50);$g('ppfDot').setAttribute('cy',-50);clearFB()};$g('glNext').onclick=nextGL;
+  }
+  function renderTOT(t){
+    const min=.5,max=3,start=1.7;glState={rate:start};
+    $g('graphLabContent').innerHTML=`<div class="graphlab-shell"><div><span class="gl-chip">Drag the slider</span><div class="gl-question">${t.prompt}</div><div class="gl-instructions">The highlighted zone is not labeled as correct until you check — use the opportunity-cost rule.</div></div>
+    <div class="gl-stage"><div class="tot-wrap"><div class="tot-line"><div class="tot-good" style="left:${pct(t.lo)}%;width:${pct(t.hi)-pct(t.lo)}%"></div><div class="tot-marker" style="left:${pct(t.lo)}%">1.33 beef</div><div class="tot-marker" style="left:${pct(t.hi)}%">2.00 beef</div></div><input id="totSlider" type="range" min="${min}" max="${max}" step="0.01" value="${start}"><div style="text-align:center;font-size:26px;font-weight:900;margin-top:8px"><span id="totVal">${start.toFixed(2)}</span> beef per wheat</div></div></div>
+    <div class="gl-actions"><button id="glCheck" class="primary">Check Trade Rate</button><button id="glHint" class="gold">Legit Hint</button><button id="glNext" class="secondary">Next Graph</button></div><div id="glHintBox" class="gl-hint"></div><div id="glFeedback" class="gl-feedback"></div></div>`;
+    $g('totSlider').oninput=e=>{glState.rate=+e.target.value;$g('totVal').textContent=glState.rate.toFixed(2);clearFB()};
+    $g('glCheck').onclick=()=>{const ok=glState.rate>t.lo&&glState.rate<t.hi;feedback(ok,ok?'Yes — that exchange rate lies strictly between 1.33 and 2.00, so both countries can gain from trade.':'Not mutually beneficial. The trade price must be strictly between 1.33 and 2.00 beef per wheat.')};
+    $g('glHint').onclick=()=>showHint(t.hint);$g('glNext').onclick=nextGL;
+  }
+  function feedback(ok,msg){const el=$g('glFeedback');if(!el)return;el.className='gl-feedback show '+(ok?'good':'bad');el.textContent=msg}
+  function clearFB(){const el=$g('glFeedback');if(el){el.className='gl-feedback';el.textContent=''}const h=$g('glHintBox');if(h){h.className='gl-hint';h.textContent=''}}
+  function showHint(msg){const el=$g('glHintBox');el.textContent=msg;el.classList.add('show')}
+  function nextGL(){glIndex=(glIndex+1)%GL_TASKS.length;renderInteractiveGraphLab()}
+  window.renderInteractiveGraphLab=function(){
+    if(typeof state!=='undefined'&&state.subject!=='ECON'){
+      $g('graphLabContent').innerHTML='<p><b>Graph Lab is for ECON 2301.</b> Switch the subject to ECON and open it again.</p>';
+      $g('graphLab').classList.remove('hidden');return;
+    }
+    const t=GL_TASKS[glIndex];
+    if(t.type==='sd')renderSD(t);else if(t.type==='ppf')renderPPF(t);else renderTOT(t);
+    $g('graphLab').classList.remove('hidden');$g('graphLab').scrollIntoView({behavior:'smooth',block:'start'});
+  };
+  const btn=$g('graphLabBtn');if(btn){btn.textContent='📈 Interactive ECON Graph Lab';btn.onclick=window.renderInteractiveGraphLab}
+  const close=$g('closeGraphLabBtn');if(close)close.onclick=()=>$g('graphLab').classList.add('hidden');
 })();
 </script>
 

@@ -1,10 +1,10 @@
-Operation Get an A v19
+Operation Get an A v20
 
-Upload these files to the ROOT of the existing GitHub repository, replacing the old files:
-- index.html
-- manifest.webmanifest
-- sw.js
-- icon-192.png
-- icon-512.png
+Update: the ECON Graph Lab is now truly interactive and touch/Apple-Pencil friendly.
+- Drag demand and supply curves left/right.
+- Predict equilibrium price and quantity, then check the graph.
+- Tap points directly on a PPF to practice efficient/inefficient/unattainable.
+- Drag a terms-of-trade slider and check whether the rate benefits both countries.
+- Legit hints explain the rule without giving away the answer.
 
-This version adds ECON Graph Lab, new actual-course-style ECON practice, updated Quick Reference rules, and stronger hints.
+Upload all files to the ROOT of the existing GitHub Pages repository and replace the older files.
