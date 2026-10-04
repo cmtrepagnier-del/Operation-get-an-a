@@ -157,7 +157,7 @@ linear-gradient(#eef1ef 1px,transparent 1px),linear-gradient(90deg,#eef1ef 1px,t
   <section class="hero">
     <div class="hero-row">
       <div>
-        <div class="brand">Operation Get an A <span style="font-size:12px;vertical-align:middle;background:#fff;color:#18392b;padding:4px 7px;border-radius:999px">v20</span></div>
+        <div class="brand">Operation Get an A <span style="font-size:12px;vertical-align:middle;background:#fff;color:#18392b;padding:4px 7px;border-radius:999px">v21</span></div>
         <div class="tagline">Learn it → work it → prove it → see it again until it sticks.</div>
       </div>
       <div class="hero-badge" id="dailyBadge">Today: 0 reps</div>
@@ -334,7 +334,8 @@ linear-gradient(#eef1ef 1px,transparent 1px),linear-gradient(90deg,#eef1ef 1px,t
           <button id="weakBtn" class="secondary">🔥 Drill Weak Stuff</button>
           <button id="queueBtn" class="secondary">📌 Redo Tomorrow / Needs Work</button>
           <button id="referenceBtn" class="secondary">🧠 Quick Reference</button>
-          <button id="graphLabBtn" class="secondary">📈 ECON Graph Lab</button>
+          <button id="graphLabBtn" class="secondary">📈 Interactive ECON Graph Lab</button>
+          <button id="drillLabBtn" class="secondary">✏️ Interactive Midterm Drills</button>
         </div>
         <div id="reference" class="reference"></div>
       </section>
@@ -1547,6 +1548,52 @@ requestAnimationFrame(()=>{resizeCanvas();buildSession(true)});
   const btn=$g('graphLabBtn');if(btn){btn.textContent='📈 Interactive ECON Graph Lab';btn.onclick=window.renderInteractiveGraphLab}
   const close=$g('closeGraphLabBtn');if(close)close.onclick=()=>$g('graphLab').classList.add('hidden');
 })();
+</script>
+
+
+<style>
+#drillLab{margin-top:14px} #drillLab.hidden{display:none}.dl-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.dl-tabs button.active{background:var(--green);color:#fff}.dl-box{border:1px solid var(--border);border-radius:16px;padding:15px;background:#fff}.dl-q{font-size:19px;font-weight:900;margin:8px 0 12px}.dl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.dl-grid button{min-height:52px}.dl-feedback{margin-top:12px;padding:11px;border-radius:12px;background:#f6f8f6}.dl-feedback.good{background:#eaf7ee}.dl-feedback.bad{background:#fff0f0}.dl-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.dl-row input,.dl-row select{min-width:110px}.dl-table{width:100%;border-collapse:collapse;margin:10px 0}.dl-table td,.dl-table th{border:1px solid var(--border);padding:8px;text-align:center}.dl-table input{width:95px}.dl-drop{padding:10px;border:1px solid var(--border);border-radius:12px;margin:7px 0;display:grid;grid-template-columns:1fr 180px;gap:8px;align-items:center}@media(max-width:650px){.dl-grid{grid-template-columns:1fr}.dl-drop{grid-template-columns:1fr}.dl-table{font-size:13px}.dl-table input{width:75px}}
+</style>
+<section id="drillLab" class="card hidden">
+ <div class="side-title">✏️ Interactive Midterm Drills</div>
+ <div class="small">Built from your 7-day Mankiw midterm guide. Do the work first; then check it.</div>
+ <div class="dl-tabs" id="dlTabs"></div><div id="dlBody"></div>
+ <div class="dl-row" style="margin-top:10px"><button id="dlHint" class="gold">Legit Hint</button><button id="dlNext" class="primary">Next Drill</button><button id="dlClose" class="secondary">Close</button></div>
+</section>
+<script>
+(()=>{const $=id=>document.getElementById(id);let chap='1-2',idx=0;const banks={
+'1-2':[
+ {t:'choice',q:'A rational student can study one more hour at a marginal benefit of $18 and a marginal cost of $12. What should they do?',a:'Study the extra hour',o:['Study the extra hour','Stop studying','Compare total benefit only','Ignore opportunity cost'],h:'Rational people think at the margin: take the action when marginal benefit is at least marginal cost.'},
+ {t:'class',q:'Classify each PPF location.',rows:[['Point ON the PPF','Efficient'],['Point INSIDE the PPF','Inefficient'],['Point OUTSIDE the PPF','Unattainable']],opts:['Efficient','Inefficient','Unattainable'],h:'On = using resources fully. Inside = resources underused. Outside = not currently attainable.'}],
+'3':[
+ {t:'calc',q:'Country A can make 10 computers OR 20 wheat per hour. Country B can make 5 computers OR 15 wheat. Enter the opportunity cost of 1 computer.',fields:[['Country A','2'],['Country B','3']],h:'Output problem: opportunity cost of 1 computer = wheat output ÷ computer output.'},
+ {t:'range',q:'A gives up 2 wheat per computer; B gives up 3. Pick a mutually beneficial price for 1 computer.',min:0,max:5,step:.1,lo:2,hi:3,h:'Terms of trade must be strictly BETWEEN the two opportunity costs.'}],
+'4':[
+ {t:'class',q:'Tell whether each event shifts demand, shifts supply, or causes movement along a curve.',rows:[['The good’s own price rises','Movement along curve'],['Consumer income rises for a normal good','Demand shift'],['Input costs fall','Supply shift'],['Consumer tastes favor the good','Demand shift']],opts:['Demand shift','Supply shift','Movement along curve'],h:'Own price = movement. Anything else that changes willingness to buy/sell at every price = shift.'},
+ {t:'choice',q:'Demand increases while supply decreases. What is certain?',a:'Price rises; quantity is ambiguous',o:['Price rises; quantity is ambiguous','Price falls; quantity rises','Price is ambiguous; quantity rises','Both are ambiguous'],h:'D right pushes P and Q up. S left pushes P up and Q down. Price agrees; quantity fights.'}],
+'24-25':[
+ {t:'gdp',q:'Build GDP: C=$1,500, I=$400, G=$500, exports=$150, imports=$200. Enter NX and GDP.',h:'NX = exports − imports. GDP = C + I + G + NX.'},
+ {t:'cpi',q:'Build the CPI basket. Base quantities are fixed: 2 books and 3 pens. Base prices: $10 and $2. Current prices: $12 and $4.',h:'First price the SAME basket in each year. CPI = current basket cost ÷ base basket cost × 100.'}],
+'29':[
+ {t:'class',q:'Classify each person for labor-force statistics.',rows:[['Has a paid job','Employed'],['Temporarily absent from job due to illness','Employed'],['No job, available, searched in past 4 weeks','Unemployed'],['Discouraged and stopped searching','Not in labor force'],['Full-time retiree not seeking work','Not in labor force']],opts:['Employed','Unemployed','Not in labor force'],h:'Labor force = employed + unemployed. Unemployed must be jobless, available, and actively searching (or waiting recall).'},
+ {t:'calc',q:'90 million employed and 10 million unemployed. Enter labor force (millions) and unemployment rate (%).',fields:[['Labor force','100'],['Unemployment rate','10']],h:'Labor force = E + U. Unemployment rate = U ÷ labor force × 100.'},
+ {t:'choice',q:'The Fed wants to CONTRACT the money supply. Choose the correct pair.',a:'Sell bonds + raise discount rate',o:['Buy bonds + lower discount rate','Sell bonds + raise discount rate','Buy bonds + raise discount rate','Sell bonds + lower discount rate'],h:'To shrink money: pull reserves OUT and make bank borrowing MORE expensive.'}
+]};
+function tabs(){const names={'1-2':'Ch 1–2','3':'Ch 3','4':'Ch 4','24-25':'Ch 24–25','29':'Ch 29'};$('dlTabs').innerHTML=Object.keys(names).map(k=>`<button data-c="${k}" class="secondary ${k===chap?'active':''}">${names[k]}</button>`).join('');$('dlTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{chap=b.dataset.c;idx=0;tabs();render()})}
+function fb(ok,msg){let e=$('dlFeedback');if(!e){e=document.createElement('div');e.id='dlFeedback';$('dlBody').appendChild(e)}e.className='dl-feedback '+(ok?'good':'bad');e.textContent=msg}
+function render(){const x=banks[chap][idx%banks[chap].length];let h=`<div class="dl-box"><div class="gl-chip">${chap==='24-25'?'Chapters 24–25':'Chapter '+chap}</div><div class="dl-q">${x.q}</div>`;
+ if(x.t==='choice')h+=`<div class="dl-grid">${x.o.map(v=>`<button class="secondary dlChoice" data-v="${v}">${v}</button>`).join('')}</div>`;
+ if(x.t==='class')h+=x.rows.map((r,i)=>`<div class="dl-drop"><b>${r[0]}</b><select class="dlSel" data-a="${r[1]}"><option value="">Choose…</option>${x.opts.map(o=>`<option>${o}</option>`).join('')}</select></div>`).join('')+`<button id="dlCheck" class="primary">Check My Work</button>`;
+ if(x.t==='calc')h+=x.fields.map((f,i)=>`<div class="dl-drop"><b>${f[0]}</b><input class="dlInp" inputmode="decimal" data-a="${f[1]}" placeholder="Your answer"></div>`).join('')+`<button id="dlCheck" class="primary">Check My Work</button>`;
+ if(x.t==='range')h+=`<div style="padding:12px"><input id="dlRange" type="range" min="${x.min}" max="${x.max}" step="${x.step}" value="1" style="width:100%"><div style="text-align:center;font-weight:900">1 computer = <span id="dlRangeVal">1.0</span> wheat</div></div><button id="dlCheck" class="primary">Check Trade Price</button>`;
+ if(x.t==='gdp')h+=`<div class="dl-row">NX = <input id="nx" inputmode="decimal"> GDP = <input id="gdp" inputmode="decimal"><button id="dlCheck" class="primary">Check</button></div>`;
+ if(x.t==='cpi')h+=`<table class="dl-table"><tr><th></th><th>Base cost</th><th>Current cost</th></tr><tr><td>2 books</td><td><input id="bb"></td><td><input id="bc"></td></tr><tr><td>3 pens</td><td><input id="pb"></td><td><input id="pc"></td></tr><tr><td>Total basket</td><td><input id="tb"></td><td><input id="tc"></td></tr></table><div class="dl-row">Current CPI = <input id="cpi"><button id="dlCheck" class="primary">Check Basket</button></div>`;
+ h+='</div>';$('dlBody').innerHTML=h;$('dlHint').onclick=()=>fb(false,'Hint: '+x.h);
+ document.querySelectorAll('.dlChoice').forEach(b=>b.onclick=()=>fb(b.dataset.v===x.a,b.dataset.v===x.a?'Correct — nice.':'Not yet. '+x.h));
+ if($('dlRange'))$('dlRange').oninput=e=>$('dlRangeVal').textContent=(+e.target.value).toFixed(1);
+ if($('dlCheck'))$('dlCheck').onclick=()=>{let ok=false;if(x.t==='class')ok=[...document.querySelectorAll('.dlSel')].every(e=>e.value===e.dataset.a);if(x.t==='calc')ok=[...document.querySelectorAll('.dlInp')].every(e=>Math.abs(parseFloat(e.value)-parseFloat(e.dataset.a))<.01);if(x.t==='range'){let v=+$('dlRange').value;ok=v>x.lo&&v<x.h}if(x.t==='gdp')ok=Math.abs(+$('nx').value+50)<.01&&Math.abs(+$('gdp').value-2350)<.01;if(x.t==='cpi')ok=+$('bb').value===20&&+$('bc').value===24&&+$('pb').value===6&&+$('pc').value===12&&+$('tb').value===26&&+$('tc').value===36&&Math.abs(+$('cpi').value-138.5)<.1;fb(ok,ok?'YES — all of it is correct.':'Not quite yet. '+x.h)}
+}
+$('drillLabBtn').onclick=()=>{$('drillLab').classList.remove('hidden');tabs();render();$('drillLab').scrollIntoView({behavior:'smooth',block:'start'})};$('dlNext').onclick=()=>{idx++;render()};$('dlClose').onclick=()=>$('drillLab').classList.add('hidden');tabs();render();})();
 </script>
 
 </body>
